@@ -51,7 +51,7 @@ def serve_any(path):
     if path == '':
         if not is_authenticated():
             return redirect('/login')
-        return redirect('/home')
+        return redirect('/team')
         
     # Handle the home path specifically (Dashboard)
     if path in ['home', 'home.html', 'index', 'index.html']:

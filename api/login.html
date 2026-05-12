@@ -109,7 +109,7 @@
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (user) {
-            window.location.href = '/home';
+            window.location.href = '/team';
         }
 
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -129,7 +129,7 @@
             .then(data => {
                 if (data.success) {
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/home';
+                    window.location.href = '/team';
                 } else {
                     alert(data.message || "Login failed");
                 }
