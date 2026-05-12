@@ -71,15 +71,19 @@ def serve_any(path):
         if not is_authenticated():
             return redirect('/login')
         try:
-            return get_asset('index.html')
+            # Explicitly serve index.html from the api folder (basedir)
+            return send_from_directory(basedir, 'index.html')
         except Exception as e:
-            return f"Error serving index.html: {str(e)}", 404
+            return f"Error serving index.html from {basedir}: {str(e)}", 404
         
     # Handle the login path specifically
     if path == 'login' or path == 'login.html':
         if is_authenticated():
             return redirect('/')
-        return get_asset('login.html')
+        try:
+            return send_from_directory(basedir, 'login.html')
+        except:
+            return get_asset('login.html')
 
     # Handle admin path specifically
     if path == 'admin' or path == 'admin.html':
