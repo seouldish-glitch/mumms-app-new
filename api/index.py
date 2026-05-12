@@ -67,7 +67,7 @@ def serve_any(path):
         return redirect('/home')
         
     # Handle the home path specifically (Dashboard)
-    if path == 'home' or path == 'home.html' or path == 'index' or path == 'index.html':
+    if path in ['home', 'home.html', 'index', 'index.html']:
         if not is_authenticated():
             return redirect('/login')
         try:
