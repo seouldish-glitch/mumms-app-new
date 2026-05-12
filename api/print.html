@@ -47,7 +47,7 @@
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || (user.role !== 'MIC' && user.role !== 'President')) {
             alert("Access denied. Only MIC and President can access this page.");
-            window.location.href = '/team';
+            window.location.href = '/home';
         }
 
         function loadEquipment() {

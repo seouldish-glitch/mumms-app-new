@@ -177,7 +177,7 @@
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || (user.role !== 'MIC' && user.role !== 'President')) {
             alert("Access denied. Admins only.");
-            window.location.href = '/team';
+            window.location.href = '/home';
         } else {
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
