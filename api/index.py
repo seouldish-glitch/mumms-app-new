@@ -6,25 +6,12 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__, static_folder=basedir, template_folder=basedir, static_url_path='')
 
-# Define where to look for original public assets (CSS/JS/etc)
+# Define where to look for assets (now all in the api folder)
 def get_asset(filename):
-    # Try local api folder first
     local_path = os.path.join(basedir, filename)
     if os.path.exists(local_path):
-        return app.send_static_file(filename)
-    
-    # Fallback search for static assets in various possible public locations
-    paths = [
-        os.path.join(basedir, '../public'),
-        os.path.join(os.getcwd(), 'public'),
-        '/var/task/public'
-    ]
-    for p in paths:
-        full_path = os.path.join(p, filename)
-        if os.path.exists(full_path):
-            return send_from_directory(p, filename)
-    
-    return f"Asset {filename} Not Found", 404
+        return send_from_directory(basedir, filename)
+    return f"Asset {filename} Not Found at {local_path}", 404
 
 @app.route('/debug-dir')
 def debug_dir():
