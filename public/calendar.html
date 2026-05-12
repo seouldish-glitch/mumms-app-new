@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Calendar - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 30% 30%, #061c14 0%, #020504 100%);
+        }
+        .glass-card {
+            background: rgba(4, 10, 8, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .nav-item.active {
+            background: rgba(0, 223, 130, 0.1);
+            color: #00DF82;
+            border-color: rgba(0, 223, 130, 0.2);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-6 flex flex-col items-center">
+
+    <!-- Subtle glow effects -->
+    <div class="absolute top-0 left-0 w-96 h-96 bg-emerald-500 opacity-[0.03] filter blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+
+    <div class="w-full max-w-7xl space-y-8 relative z-10">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-950 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-center">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider">@MEDIA</span>
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-sm tracking-wide">St. Benedict's College Media</h2>
+                    <p class="text-slate-500 text-xs font-light">Media Unit Management</p>
+                </div>
+                <div class="ml-2">
+                    <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">MUMMS</span>
+                </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="flex items-center gap-4 glass-card px-5 py-3 rounded-2xl border border-emerald-900/30">
+                <div class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <span id="user-avatar">U</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white" id="current-user-name">Loading...</div>
+                    <div class="text-xs text-emerald-400 font-medium" id="current-user-role">...</div>
+                </div>
+                <button class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors ml-2 font-medium border border-emerald-500/20" onclick="logout()">Sign out</button>
+            </div>
+        </div>
+
+        <!-- Title Area -->
+        <div class="space-y-4">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight">
+                St. Benedict's College<br>
+                Media Member<br>
+                Management System
+            </h1>
+            <p class="text-slate-400 text-sm md:text-base font-light max-w-2xl leading-relaxed">
+                Command center for current team access, event calendars, automated duty alerts, event attendance, and equipment operations.
+            </p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="glass-card rounded-2xl p-2 flex flex-wrap gap-2">
+            <a href="/home" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dashboard</a>
+            <a href="/team" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Our Team</a>
+            <a href="/calendar" class="nav-item active px-5 py-3 rounded-xl text-sm font-medium text-white transition-colors border">Event Calendar</a>
+            <a href="#" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Attendance</a>
+            <a href="#" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Inventory</a>
+            <a href="#" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dispatch</a>
+        </div>
+
+        <!-- Calendar and Form Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left: Visual Schedule (Calendar) -->
+            <div id="calendar-container" class="lg:col-span-2 glass-card rounded-3xl p-8 space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Visual Schedule</span>
+                        <h2 id="calendar-title" class="text-3xl font-bold text-white mt-1">May 2026</h2>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="prev-month" class="w-10 h-10 bg-emerald-950 border border-emerald-800 rounded-xl flex items-center justify-center text-emerald-400 hover:bg-emerald-900 transition-colors">&larr;</button>
+                        <button id="next-month" class="w-10 h-10 bg-emerald-950 border border-emerald-800 rounded-xl flex items-center justify-center text-emerald-400 hover:bg-emerald-900 transition-colors">&rarr;</button>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div class="grid grid-cols-7 gap-2" id="calendar-grid">
+                    <!-- Days will be generated by JS -->
+                </div>
+            </div>
+
+            <!-- Right: Add New Duty -->
+            <div id="duty-form-container" class="glass-card rounded-3xl p-8 space-y-6 h-fit">
+                <div>
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Add New Duty</span>
+                    <h2 class="text-2xl font-bold text-white mt-1">Schedule Event</h2>
+                </div>
+
+                <form class="space-y-4" id="eventForm">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-400">Event title</label>
+                        <input type="text" id="event-title" required class="w-full bg-black/50 border border-emerald-900/50 rounded-xl py-2.5 px-4 text-white placeholder-slate-700 focus:outline-none focus:border-emerald-500 transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-slate-400">Date</label>
+                            <input type="date" id="event-date" required class="w-full bg-black/50 border border-emerald-900/50 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-emerald-500 transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-medium text-slate-400">Status</label>
+                            <select id="event-status" class="w-full bg-black/50 border border-emerald-900/50 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-emerald-500 transition-all">
+                                <option value="Planned">Planned</option>
+                                <option value="Confirmed">Confirmed</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-slate-400">Venue</label>
+                        <input type="text" id="event-venue" required class="w-full bg-black/50 border border-emerald-900/50 rounded-xl py-2.5 px-4 text-white placeholder-slate-700 focus:outline-none focus:border-emerald-500 transition-all">
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-slate-400">Assign Members:</label>
+                        <div class="space-y-2 max-h-48 overflow-y-auto pr-2" id="members-list">
+                            <!-- Members loaded here -->
+                            <div class="text-slate-600 text-xs">Loading members...</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="save-btn" class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-black font-bold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-emerald-500/10">
+                        SAVE EVENT
+                    </button>
+                    <p id="permission-msg" class="text-xs text-red-400 text-center hidden">Only MIC and President can assign duties.</p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Upcoming List -->
+        <div class="glass-card rounded-3xl p-8 space-y-4">
+            <h2 class="text-xl font-bold text-white">Upcoming List</h2>
+            <div id="events-list" class="space-y-2">
+                <div class="text-slate-500 text-sm">No upcoming duties found.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full space-y-4 border border-emerald-500/30">
+            <h3 id="modal-title" class="text-xl font-bold text-white">Message</h3>
+            <p id="modal-msg" class="text-slate-100 text-sm whitespace-pre-line"></p>
+            <div class="flex justify-end gap-2">
+                <button id="modal-close" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg transition-colors font-medium border border-emerald-500/20">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
+        let currentYear = 2026;
+        let currentMonth = 4; // May
+
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        function generateCalendar(year, month) {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            
+            document.getElementById('calendar-title').innerText = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                grid.appendChild(empty);
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.id = `day-${day}`;
+                dayEl.className = 'aspect-square flex items-center justify-center rounded-lg border border-emerald-900/10 hover:border-emerald-500/30 cursor-pointer transition-colors text-sm font-medium';
+                dayEl.innerText = day;
+                
+                dayEl.addEventListener('click', () => {
+                    showDateInfo(currentYear, currentMonth, day);
+                });
+                
+                grid.appendChild(dayEl);
+            }
+            
+            loadEvents();
+        }
+
+        document.getElementById('prev-month').addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar(currentYear, currentMonth);
+        });
+
+        document.getElementById('next-month').addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar(currentYear, currentMonth);
+        });
+
+        // Initial generation
+        generateCalendar(currentYear, currentMonth);
+
+        // Fetch members for assignment
+        fetch('/api/users')
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('members-list');
+                list.innerHTML = '';
+                if (data.success && data.users.length > 0) {
+                    data.users.forEach(u => {
+                        if (u.role === 'MIC' || u.role === 'President') return;
+                        
+                        const item = document.createElement('div');
+                        item.className = 'flex items-center gap-3 bg-black/30 p-2.5 rounded-xl border border-emerald-900/20';
+                        item.innerHTML = `
+                            <input type="checkbox" value="${u.displayName}" class="member-check rounded border-emerald-800 text-emerald-500 focus:ring-emerald-500/30 bg-black h-4 w-4">
+                            <div>
+                                <div class="text-sm font-medium text-white">${u.displayName}</div>
+                                <div class="text-xs text-emerald-400 font-medium">${u.role}</div>
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                    
+                    // Apply permission check after members are loaded
+                    checkPermissions();
+                } else {
+                    list.innerHTML = '<div class="text-slate-600 text-xs">No members found.</div>';
+                }
+            });
+
+        function checkPermissions() {
+            const canAssign = user && (user.role === 'MIC' || user.role === 'President');
+            
+            if (!canAssign) {
+                document.getElementById('duty-form-container').classList.add('hidden');
+                document.getElementById('calendar-container').classList.remove('lg:col-span-2');
+                document.getElementById('calendar-container').classList.add('lg:col-span-3');
+            }
+        }
+
+        // Form submission
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('event-title').value;
+            const date = document.getElementById('event-date').value;
+            const status = document.getElementById('event-status').value;
+            const venue = document.getElementById('event-venue').value;
+            
+            // Date check (Sri Lanka time)
+            const today = new Date();
+            const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Colombo', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const todayStr = formatter.format(today); // YYYY-MM-DD
+            
+            if (date < todayStr) {
+                showModal("Validation Error", "Cannot schedule events in the past.");
+                return;
+            }
+            
+            const assigned = [];
+            document.querySelectorAll('.member-check:checked').forEach(c => assigned.push(c.value));
+            
+            const btn = document.getElementById('save-btn');
+            const eventId = btn.getAttribute('data-id');
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+            
+            const url = eventId ? `/api/events/${eventId}` : '/api/events';
+            const method = eventId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    title,
+                    date,
+                    status,
+                    venue,
+                    assigned_members: assigned,
+                    user_role: user.role
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                if (data.success) {
+                    showModal("Success", `Event ${eventId ? 'updated' : 'saved'} successfully!`);
+                    document.getElementById('eventForm').reset();
+                    btn.removeAttribute('data-id');
+                    btn.innerText = "Save Duty";
+                    generateCalendar(currentYear, currentMonth); // Refresh calendar
+                } else {
+                    showModal("Error", data.message || "Failed to save event");
+                }
+            })
+            .catch(err => {
+                console.error("Error saving event:", err);
+                showModal("Error", "Network error.");
+            });
+        });
+
+        // Load events
+        function loadEvents() {
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('events-list');
+                    list.innerHTML = '';
+                    if (data.success && data.events.length > 0) {
+                        data.events.forEach(ev => {
+                            // Mark day on calendar
+                            const dateParts = ev.date.split('-');
+                            if (dateParts[0] === '2026' && dateParts[1] === '05') {
+                                const dayNum = parseInt(dateParts[2], 10);
+                                const dayEl = document.getElementById(`day-${dayNum}`);
+                                if (dayEl) {
+                                    dayEl.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-400');
+                                    if (!dayEl.querySelector('.event-dot')) {
+                                        const dot = document.createElement('div');
+                                        dot.className = 'w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1 event-dot';
+                                        dayEl.classList.add('flex-col');
+                                        dayEl.appendChild(dot);
+                                    }
+                                }
+                            }
+
+                            const isAssigned = user && ev.assigned_members && ev.assigned_members.includes(user.displayName);
+                            const isAdmin = user && (user.role === 'MIC' || user.role === 'President');
+                            const item = document.createElement('div');
+                            item.className = `bg-black/30 p-4 rounded-xl border ${isAssigned ? 'border-emerald-500 bg-emerald-500/5' : 'border-emerald-900/20'} flex flex-col md:flex-row justify-between md:items-center gap-4`;
+                            item.innerHTML = `
+                                <div>
+                                    <div class="font-bold text-white text-lg">${ev.title}</div>
+                                    <div class="text-sm text-slate-400">${ev.date} | ${ev.venue}</div>
+                                    <div class="text-xs text-emerald-400 mt-1 font-medium">Assigned: ${ev.assigned_members.join(', ') || 'None'}</div>
+                                    ${isAssigned ? '<div class="text-xs text-emerald-300 mt-1 font-bold">👉 You are assigned to this duty.</div>' : ''}
+                                </div>
+                                <div class="flex gap-2">
+                                    ${isAdmin ? `
+                                        <button onclick="editEvent('${ev._id}')" class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">Edit</button>
+                                        <button onclick="deleteEvent('${ev._id}')" class="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 px-2 py-1 rounded border border-red-500/20">Del</button>
+                                    ` : ''}
+                                    <div class="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 w-fit">
+                                        ${ev.status}
+                                    </div>
+                                </div>
+                            `;
+                            list.appendChild(item);
+                        });
+                    } else {
+                        list.innerHTML = '<div class="text-slate-500 text-sm">No upcoming duties found.</div>';
+                    }
+                })
+                .catch(err => console.error("Error loading events:", err));
+        }
+
+        function showDateInfo(year, month, day) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const dayEvents = data.events.filter(ev => ev.date === dateStr);
+                        if (dayEvents.length > 0) {
+                            let msg = "";
+                            dayEvents.forEach(ev => {
+                                msg += `• ${ev.title} at ${ev.venue} (${ev.status})\n`;
+                            });
+                            showModal(`Events on ${dateStr}`, msg);
+                        } else {
+                            showModal(`Events on ${dateStr}`, "No events scheduled for this day.");
+                        }
+                    }
+                });
+        }
+
+        // Modal functions
+        function showModal(title, msg) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+        });
+
+        function deleteEvent(id) {
+            if (confirm("Are you sure you want to delete this event?")) {
+                fetch(`/api/events/${id}?user_role=${user.role}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showModal("Success", "Event deleted");
+                        generateCalendar(currentYear, currentMonth); // Refresh calendar
+                    } else {
+                        showModal("Error", data.message || "Failed to delete");
+                    }
+                });
+            }
+        }
+
+        function editEvent(id) {
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    const ev = data.events.find(e => e._id === id);
+                    if (ev) {
+                        document.getElementById('event-title').value = ev.title;
+                        document.getElementById('event-date').value = ev.date;
+                        document.getElementById('event-venue').value = ev.venue;
+                        document.getElementById('event-status').value = ev.status;
+                        
+                        document.querySelectorAll('.member-check').forEach(c => {
+                            c.checked = ev.assigned_members.includes(c.value);
+                        });
+                        
+                        const btn = document.getElementById('save-btn');
+                        btn.innerText = "Update Event";
+                        btn.setAttribute('data-id', id);
+                        
+                        document.getElementById('duty-form-container').scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+        }
+
+        // Initial load
+        loadEvents();
+    </script>
+
+
+</body>
+</html>
+

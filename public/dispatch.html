@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 30% 30%, #061c14 0%, #020504 100%);
+        }
+        .glass-card {
+            background: rgba(4, 10, 8, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .nav-item.active {
+            background: rgba(0, 223, 130, 0.1);
+            color: #00DF82;
+            border-color: rgba(0, 223, 130, 0.2);
+        }
+        .tab-btn.active {
+            background: rgba(0, 223, 130, 0.1);
+            color: #00DF82;
+            border-color: rgba(0, 223, 130, 0.2);
+        }
+        #reader__scan_region {
+            background: transparent !important;
+        }
+        #reader__dashboard {
+            display: none !important;
+        }
+        video {
+            border-radius: 1rem;
+        }
+        .spinner {
+            border: 3px solid rgba(0, 223, 130, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #00DF82;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-6 flex flex-col items-center">
+
+    <div class="w-full max-w-7xl space-y-8 relative z-10">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-950 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-center">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider">@MEDIA</span>
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-sm tracking-wide">St. Benedict's College Media</h2>
+                    <p class="text-slate-500 text-xs font-light">Media Unit Management</p>
+                </div>
+                <div class="ml-2">
+                    <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">MUMMS</span>
+                </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="flex items-center gap-4 glass-card px-5 py-3 rounded-2xl border border-emerald-900/30">
+                <div class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <span id="user-avatar">U</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white" id="current-user-name">Loading...</div>
+                    <div class="text-xs text-emerald-400 font-medium" id="current-user-role">...</div>
+                </div>
+                <button class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors ml-2 font-medium border border-emerald-500/20" onclick="logout()">Sign out</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="glass-card rounded-2xl p-2 flex flex-nowrap overflow-x-auto gap-2 no-scrollbar">
+            <a href="/home" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dashboard</a>
+            <a href="/team" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Our Team</a>
+            <a href="/calendar" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Calendar</a>
+            <a href="/attendance" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Attendance</a>
+            <a href="/inventory" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Inventory</a>
+            <a href="/dispatch" class="nav-item active px-5 py-3 rounded-xl text-sm font-medium text-white transition-colors border">Dispatch</a>
+            <a href="/admin" id="admin-nav" class="hidden px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Admin</a>
+        </div>
+
+        <!-- Dispatch Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Left Column: Scanner -->
+            <div class="glass-card rounded-3xl p-6 space-y-6">
+                <div>
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Equipment Logistics</span>
+                    <h1 class="text-3xl font-bold text-white mt-1">Security Dispatch & Return</h1>
+                    <p class="text-slate-400 text-sm mt-1">Automatic back-camera detection enabled. Scan any SBC asset tag to begin the protocol.</p>
+                </div>
+
+                <!-- Scanner View -->
+                <div class="relative bg-black/50 rounded-2xl overflow-hidden aspect-square border border-emerald-900/30">
+                    <div id="reader" class="w-full h-full"></div>
+                    
+                    <!-- Overlay Frame -->
+                    <div class="absolute inset-0 border-2 border-dashed border-emerald-500/30 rounded-2xl pointer-events-none m-4"></div>
+                    <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-emerald-500/50 pointer-events-none"></div>
+                    
+                    <div class="absolute bottom-4 left-0 right-0 text-center text-xs text-slate-400 pointer-events-none">
+                        Point camera at QR code for auto-detection
+                    </div>
+                </div>
+                
+                <div class="flex justify-center gap-2">
+                    <button id="start-btn" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/20 text-sm font-medium" onclick="startScanner()">Start Camera</button>
+                    <button id="stop-btn" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-lg border border-red-500/20 text-sm font-medium hidden" onclick="stopScanner()">Stop Camera</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Form -->
+            <div class="glass-card rounded-3xl p-6 space-y-6">
+                <!-- Tabs -->
+                <div class="grid grid-cols-2 gap-2 bg-black/30 p-1.5 rounded-xl border border-emerald-900/20">
+                    <button id="tab-checkout" class="tab-btn active py-2.5 rounded-lg text-sm font-medium transition-colors border border-transparent" onclick="setMode('checkout')">Checkout</button>
+                    <button id="tab-return" class="tab-btn py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-colors border border-transparent" onclick="setMode('return')">Return</button>
+                </div>
+
+                <!-- Form Fields -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Scanned Equipment ID</label>
+                        <input type="text" id="equipment-id" class="w-full bg-black/30 border border-emerald-900/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors mt-1" placeholder="Scan QR or enter ID">
+                    </div>
+
+                    <!-- Checked Out Items List (Visible in Return mode) -->
+                    <div id="checked-out-list-container" class="hidden space-y-2">
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Your Checked Out Items</label>
+                        <div id="checked-out-list" class="bg-black/30 border border-emerald-900/30 rounded-xl p-3 text-sm space-y-2">
+                            <div class="text-slate-500 text-xs">Loading your items...</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Member</label>
+                        <input type="text" id="member-name" class="w-full bg-black/30 border border-emerald-900/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors mt-1" placeholder="Enter member name" readonly>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Purpose of Use / Event</label>
+                        <select id="purpose" class="w-full bg-black/30 border border-emerald-900/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-emerald-500 transition-colors mt-1">
+                            <option value="">Select purpose or event</option>
+                            <optgroup label="Upcoming Duties" id="upcoming-duties-group">
+                                <!-- Events will be loaded here -->
+                            </optgroup>
+                            <optgroup label="General">
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Test / Practice">Test / Practice</option>
+                                <option value="Personal Practice">Personal Practice</option>
+                                <option value="Other">Other</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Digital Signature</label>
+                            <button class="text-xs text-emerald-400 hover:text-emerald-300" onclick="clearSignature()">Clear</button>
+                        </div>
+                        <div class="w-full bg-black/30 border border-emerald-900/30 rounded-xl mt-1 h-32 relative overflow-hidden">
+                            <canvas id="sig-canvas" class="w-full h-full cursor-crosshair"></canvas>
+                        </div>
+                    </div>
+
+                    <button id="action-btn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-emerald-500/20" onclick="authorizeDispatch()">Authorize Dispatch</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/80 backdrop-filter blur-sm flex items-center justify-center z-50">
+        <div class="flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-emerald-400 text-sm font-medium">Processing protocol...</p>
+        </div>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+        <div class="glass-card rounded-3xl p-8 max-w-md w-full space-y-4 border border-emerald-500/30">
+            <h3 id="modal-title" class="text-xl font-bold text-white">Message</h3>
+            <p id="modal-msg" class="text-slate-100 text-sm whitespace-pre-line"></p>
+            <div class="flex justify-end gap-2">
+                <button id="modal-close" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg transition-colors font-medium border border-emerald-500/20">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLoading(text = "Processing protocol...") {
+            document.querySelector('#loading-overlay p').innerText = text;
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+            
+            // Auto-fill member name with current user for now
+            document.getElementById('member-name').value = user.displayName || '';
+            
+            if (user.role === 'MIC' || user.role === 'President') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
+        let mode = 'checkout'; // or 'return'
+        let html5QrCode;
+
+        function setMode(newMode) {
+            mode = newMode;
+            document.getElementById('tab-checkout').classList.toggle('active', mode === 'checkout');
+            document.getElementById('tab-checkout').classList.toggle('text-slate-400', mode !== 'checkout');
+            document.getElementById('tab-return').classList.toggle('active', mode === 'return');
+            document.getElementById('tab-return').classList.toggle('text-slate-400', mode !== 'return');
+            
+            document.getElementById('action-btn').innerText = mode === 'checkout' ? 'Authorize Dispatch' : 'Confirm Return';
+            
+            if (mode === 'checkout') {
+                document.getElementById('action-btn').className = "w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-emerald-500/20";
+            } else {
+                document.getElementById('action-btn').className = "w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg shadow-blue-500/20";
+            }
+            
+            // Toggle list
+            document.getElementById('checked-out-list-container').classList.toggle('hidden', mode !== 'return');
+            if (mode === 'return') {
+                loadUserEquipment();
+            }
+        }
+
+        // Scanner
+        function startScanner() {
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('stop-btn').classList.remove('hidden');
+            
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                (decodedText) => {
+                    document.getElementById('equipment-id').value = decodedText;
+                    stopScanner();
+                    showModal("Scanned", `Equipment ID: ${decodedText}`);
+                },
+                (errorMessage) => {
+                    // Ignore errors during scan
+                }
+            ).catch((err) => {
+                console.error("Error starting scanner:", err);
+                showModal("Error", "Could not access camera.");
+                stopScanner();
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('start-btn').classList.remove('hidden');
+                    document.getElementById('stop-btn').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('start-btn').classList.remove('hidden');
+                document.getElementById('stop-btn').classList.add('hidden');
+            }
+        }
+
+        // Signature Canvas
+        const canvas = document.getElementById('sig-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        // Set canvas size to match display size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100); // Wait for render
+
+        canvas.addEventListener('mousedown', (e) => { drawing = true; draw(e); });
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+        
+        // Touch events
+        canvas.addEventListener('touchstart', (e) => { drawing = true; draw(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchend', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('touchmove', (e) => { draw(e.touches[0]); e.preventDefault(); });
+
+        function draw(e) {
+            if (!drawing) return;
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#00DF82';
+
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function authorizeDispatch() {
+            const customId = document.getElementById('equipment-id').value;
+            const member = document.getElementById('member-name').value;
+            const purpose = document.getElementById('purpose').value;
+            
+            if (!customId) {
+                showModal("Validation Error", "Please scan an equipment QR code first.");
+                return;
+            }
+            if (!purpose) {
+                showModal("Validation Error", "Please select a purpose.");
+                return;
+            }
+            
+            showLoading("Authorizing dispatch...");
+            
+            fetch('/api/dispatch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customId,
+                    type: mode,
+                    member,
+                    purpose,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showModal("Success", `Equipment ${mode === 'checkout' ? 'dispatched' : 'returned'} successfully!`);
+                    document.getElementById('equipment-id').value = '';
+                    document.getElementById('purpose').value = '';
+                    clearSignature();
+                    if (mode === 'return') loadUserEquipment();
+                } else {
+                    showModal("Error", data.message || "Failed to process request");
+                }
+            })
+            .catch(err => {
+                console.error("Error dispatching:", err);
+                showModal("Error", "Network error.");
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        }
+
+        function showModal(title, msg) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        
+        function loadEventsForDropdown() {
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    const group = document.getElementById('upcoming-duties-group');
+                    if (data.success && data.events.length > 0) {
+                        data.events.forEach(ev => {
+                            const option = document.createElement('option');
+                            option.value = ev.title;
+                            option.innerText = ev.title;
+                            group.appendChild(option);
+                        });
+                    }
+                });
+        }
+        loadEventsForDropdown();
+
+        function loadUserEquipment() {
+            showLoading("Fetching your items...");
+            const list = document.getElementById('checked-out-list');
+            list.innerHTML = '<div class="text-slate-500 text-xs">Loading your items...</div>';
+            
+            fetch(`/api/equipment?current_user=${encodeURIComponent(user.displayName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    list.innerHTML = '';
+                    if (data.success && data.equipment.length > 0) {
+                        data.equipment.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'flex justify-between items-center bg-emerald-500/5 hover:bg-emerald-500/10 p-2 rounded-lg cursor-pointer border border-emerald-500/10 transition-colors';
+                            div.innerHTML = `
+                                <div class="font-medium text-white">${item.name}</div>
+                                <div class="text-xs text-emerald-400 font-mono">${item.customId}</div>
+                            `;
+                            div.onclick = () => {
+                                document.getElementById('equipment-id').value = item.customId;
+                                Array.from(list.children).forEach(c => c.classList.remove('border-emerald-500'));
+                                div.classList.add('border-emerald-500');
+                            };
+                            list.appendChild(div);
+                        });
+                    } else {
+                        list.innerHTML = '<div class="text-slate-500 text-xs">No items checked out by you.</div>';
+                    }
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+        }
+
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
+

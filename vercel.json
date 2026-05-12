@@ -1,0 +1,17 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/login", "destination": "/api/index.py" },
+    { "source": "/home", "destination": "/api/index.py" },
+    { "source": "/index", "destination": "/api/index.py" },
+    { "source": "/", "destination": "/api/index.py" },
+    { "source": "/team", "destination": "/api/index.py" },
+    { "source": "/inventory", "destination": "/api/index.py" },
+    { "source": "/attendance", "destination": "/api/index.py" },
+    { "source": "/dispatch", "destination": "/api/index.py" },
+    { "source": "/admin", "destination": "/api/index.py" },
+    { "source": "/calendar", "destination": "/api/index.py" },
+    { "source": "/logout", "destination": "/api/index.py" }
+  ]
+}

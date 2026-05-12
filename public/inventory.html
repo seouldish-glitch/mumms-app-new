@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 30% 30%, #061c14 0%, #020504 100%);
+        }
+        .glass-card {
+            background: rgba(4, 10, 8, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .nav-item.active {
+            background: rgba(0, 223, 130, 0.1);
+            color: #00DF82;
+            border-color: rgba(0, 223, 130, 0.2);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-6 flex flex-col items-center">
+
+    <div class="w-full max-w-7xl space-y-8 relative z-10">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-950 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-center">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider">@MEDIA</span>
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-sm tracking-wide">St. Benedict's College Media</h2>
+                    <p class="text-slate-500 text-xs font-light">Media Unit Management</p>
+                </div>
+                <div class="ml-2">
+                    <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">MUMMS</span>
+                </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="flex items-center gap-4 glass-card px-5 py-3 rounded-2xl border border-emerald-900/30">
+                <div class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <span id="user-avatar">U</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white" id="current-user-name">Loading...</div>
+                    <div class="text-xs text-emerald-400 font-medium" id="current-user-role">...</div>
+                </div>
+                <button class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors ml-2 font-medium border border-emerald-500/20" onclick="logout()">Sign out</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="glass-card rounded-2xl p-2 flex flex-wrap gap-2">
+            <a href="/home" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dashboard</a>
+            <a href="/team" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Our Team</a>
+            <a href="/calendar" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Calendar</a>
+            <a href="/attendance" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Attendance</a>
+            <a href="/inventory" class="nav-item active px-5 py-3 rounded-xl text-sm font-medium text-white transition-colors border">Inventory</a>
+            <a href="#" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dispatch</a>
+        </div>
+
+        <!-- Inventory Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Title Card -->
+                <div class="glass-card rounded-3xl p-8 space-y-4">
+                    <div>
+                        <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">System Admin</span>
+                        <h1 class="text-4xl font-bold text-white mt-1">Inventory Command</h1>
+                        <p class="text-slate-400 text-sm mt-1">Manage and track media unit equipment.</p>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm font-medium border border-emerald-500/20">System Inventory</button>
+                        <a href="/print" id="print-btn" class="hidden px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-sm font-medium border border-emerald-500/20">Print All QRs</a>
+                    </div>
+                </div>
+
+                <!-- Table Card -->
+                <div class="glass-card rounded-3xl overflow-hidden">
+                    <div class="p-6 border-b border-emerald-900/30">
+                        <h2 class="text-xl font-bold text-white">Equipment Manifest</h2>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-300">
+                            <thead class="text-xs uppercase text-slate-500 bg-black/50">
+                                <tr>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Category</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4">QR Code / Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-list" class="divide-y divide-emerald-900/20">
+                                <!-- Items will load here -->
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-slate-500">Loading inventory...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Overview Card -->
+                <div class="glass-card rounded-3xl p-6 space-y-4">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Inventory Stack</span>
+                    <h2 class="text-xl font-bold text-white">Asset Overview</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="bg-black/30 p-4 rounded-xl border border-emerald-900/20 flex justify-between items-center">
+                            <div>
+                                <div class="text-2xl font-bold text-white" id="total-assets">0</div>
+                                <div class="text-xs text-slate-500">Total Assets</div>
+                            </div>
+                            <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">📦</div>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-emerald-900/20 flex justify-between items-center">
+                            <div>
+                                <div class="text-2xl font-bold text-white" id="total-categories">0</div>
+                                <div class="text-xs text-slate-500">Categories</div>
+                            </div>
+                            <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">🏷️</div>
+                        </div>
+                        <div class="bg-black/30 p-4 rounded-xl border border-emerald-900/20 flex justify-between items-center">
+                            <div>
+                                <div class="text-2xl font-bold text-white" id="total-available">0</div>
+                                <div class="text-xs text-slate-500">Available</div>
+                            </div>
+                            <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-400">✅</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden QR Container for generation -->
+    <div id="qr-hidden" class="hidden"></div>
+
+    <script>
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+        }
+
+        const isAdmin = user && (user.role === 'MIC' || user.role === 'President');
+        if (isAdmin) {
+            document.getElementById('print-btn').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
+        // Load equipment
+        function loadEquipment() {
+            fetch('/api/equipment')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('inventory-list');
+                    list.innerHTML = '';
+                    
+                    if (data.success && data.equipment.length > 0) {
+                        document.getElementById('total-assets').innerText = data.equipment.length;
+                        
+                        const categories = new Set(data.equipment.map(item => item.category));
+                        document.getElementById('total-categories').innerText = categories.size;
+                        
+                        const available = data.equipment.filter(item => item.status === 'available').length;
+                        document.getElementById('total-available').innerText = available;
+                        
+                        data.equipment.forEach(item => {
+                            const tr = document.createElement('tr');
+                            tr.className = 'hover:bg-emerald-900/5 transition-colors';
+                            
+                            const qrAction = isAdmin ? 
+                                `<button onclick="downloadQR('${item.customId}', '${item.name}')" class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20 font-medium">Download QR</button>` : 
+                                `<span class="text-slate-600 text-xs">No access</span>`;
+                                
+                            tr.innerHTML = `
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-white">${item.name}</div>
+                                    <div class="text-xs text-slate-500">${item.customId}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">${item.category}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'available' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'} border ${item.status === 'available' ? 'border-emerald-500/20' : 'border-red-500/20'}">${item.status}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    ${qrAction}
+                                </td>
+                            `;
+                            list.appendChild(tr);
+                        });
+                    } else {
+                        list.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-500">No equipment found.</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading equipment:", err);
+                    document.getElementById('inventory-list').innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-red-400">Error loading inventory.</td></tr>';
+                });
+        }
+
+        // Download QR
+        function downloadQR(id, name) {
+            const qrContainer = document.getElementById('qr-hidden');
+            qrContainer.innerHTML = '';
+            
+            // Generate QR code
+            new QRCode(qrContainer, {
+                text: id, // The QR contains the customId
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Wait for image to generate
+            setTimeout(() => {
+                const img = qrContainer.querySelector('img');
+                if (img) {
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.download = `${name}_${id}_QR.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    alert("Failed to generate QR. Try again.");
+                }
+            }, 100);
+        }
+
+        // Initial load
+        loadEquipment();
+    </script>
+</body>
+</html>
+

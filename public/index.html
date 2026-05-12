@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 30% 30%, #061c14 0%, #020504 100%);
+        }
+        .glass-card {
+            background: rgba(4, 10, 8, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .nav-item.active {
+            background: rgba(0, 223, 130, 0.1);
+            color: #00DF82;
+            border-color: rgba(0, 223, 130, 0.2);
+        }
+        .circle-progress {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        .circle-progress svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .circle-progress circle {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+        }
+        .circle-progress circle.bg {
+            stroke: rgba(16, 185, 129, 0.1);
+        }
+        .circle-progress circle.fg {
+            stroke: #00DF82;
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2; /* Full is 0 */
+            transition: stroke-dashoffset 1s ease-in-out;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-6 flex flex-col items-center">
+
+    <div class="w-full max-w-7xl space-y-8 relative z-10">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-950 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-center">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider">@MEDIA</span>
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-sm tracking-wide">St. Benedict's College Media</h2>
+                    <p class="text-slate-500 text-xs font-light">Media Unit Management</p>
+                </div>
+                <div class="ml-2">
+                    <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">MUMMS</span>
+                </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="flex items-center gap-4 glass-card px-5 py-3 rounded-2xl border border-emerald-900/30">
+                <div class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <span id="user-avatar">U</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white" id="current-user-name">Loading...</div>
+                    <div class="text-xs text-emerald-400 font-medium" id="current-user-role">...</div>
+                </div>
+                <button class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors ml-2 font-medium border border-emerald-500/20" onclick="logout()">Sign out</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="glass-card rounded-2xl p-2 flex flex-nowrap overflow-x-auto gap-2 no-scrollbar">
+            <a href="/home" class="nav-item active px-5 py-3 rounded-xl text-sm font-medium text-white transition-colors border">Dashboard</a>
+            <a href="/team" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Our Team</a>
+            <a href="/calendar" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Calendar</a>
+            <a href="/attendance" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Attendance</a>
+            <a href="/inventory" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Inventory</a>
+            <a href="/dispatch" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dispatch</a>
+            <a href="/admin" id="admin-nav" class="hidden px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Admin</a>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Profile & Active Equipment -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Profile Card -->
+                <div class="glass-card rounded-3xl p-6 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold text-2xl">
+                        <span id="profile-avatar">MS</span>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white" id="profile-name">Master Senitha</h1>
+                        <span class="bg-emerald-500/10 text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-500/20 uppercase" id="profile-role">President</span>
+                    </div>
+                </div>
+
+                <!-- Active Equipment -->
+                <div class="glass-card rounded-3xl p-6 space-y-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-emerald-400">💼</span>
+                        <h2 class="text-lg font-bold text-white">Active Equipment</h2>
+                    </div>
+                    <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 text-emerald-300 text-sm">
+                        No items checked out. All clear!
+                    </div>
+                </div>
+
+                <!-- Metrics Section -->
+                <div class="glass-card rounded-3xl p-6 space-y-4">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Your Metrics</span>
+                    <h2 class="text-2xl font-bold text-white">Activity</h2>
+                    
+                    <div class="flex gap-8 justify-around">
+                        <!-- Metric 1 -->
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="circle-progress">
+                                <svg>
+                                    <circle class="bg" cx="40" cy="40" r="35"></circle>
+                                    <circle class="fg" cx="40" cy="40" r="35" id="circle-events"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center font-bold text-xl" id="count-events">0</div>
+                            </div>
+                            <span class="text-xs text-slate-400">My Events</span>
+                        </div>
+                        
+                        <!-- Metric 2 -->
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="circle-progress">
+                                <svg>
+                                    <circle class="bg" cx="40" cy="40" r="35"></circle>
+                                    <circle class="fg" cx="40" cy="40" r="35" id="circle-items"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center font-bold text-xl" id="count-items">0</div>
+                            </div>
+                            <span class="text-xs text-slate-400">Items Held</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Duty Schedule -->
+            <div class="space-y-6">
+                <!-- Upcoming Duties -->
+                <div class="glass-card rounded-3xl p-6 space-y-4">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Duty Schedule</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl">📅</span>
+                        <h2 class="text-xl font-bold text-white">Upcoming Duties</h2>
+                    </div>
+                    
+                    <div id="upcoming-duties" class="space-y-3">
+                        <div class="text-slate-500 text-sm">No upcoming duties assigned to you.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Width: Recent Activity -->
+            <div class="lg:col-span-3">
+                <div class="glass-card rounded-3xl p-6 space-y-4">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Recent Activity</span>
+                    <h2 class="text-2xl font-bold text-white">Checkouts & Returns</h2>
+                    
+                    <div id="recent-activity" class="text-slate-500 text-sm">
+                        No recent activity found.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check login (UI only)
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+            
+            // Populate profile card
+            document.getElementById('profile-name').innerText = user.displayName || 'User';
+            document.getElementById('profile-role').innerText = user.role || 'Member';
+            document.getElementById('profile-avatar').innerText = initials;
+            
+            if (user.role === 'MIC' || user.role === 'President') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
+        // Load dashboard data
+        function loadDashboard() {
+            // Fetch events to count user's assignments
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const myEvents = data.events.filter(ev => ev.assigned_members && ev.assigned_members.includes(user.displayName));
+                        
+                        document.getElementById('count-events').innerText = myEvents.length;
+                        
+                        // Update circle progress (max 10 for demo scale)
+                        const circle = document.getElementById('circle-events');
+                        const percent = Math.min(myEvents.length / 10, 1);
+                        const offset = 251.2 * (1 - percent);
+                        circle.style.strokeDashoffset = offset;
+                        
+                        // Populate upcoming duties
+                        const dutiesList = document.getElementById('upcoming-duties');
+                        if (myEvents.length > 0) {
+                            dutiesList.innerHTML = '';
+                            myEvents.slice(0, 3).forEach(ev => {
+                                const item = document.createElement('div');
+                                item.className = 'bg-black/30 p-3 rounded-lg border border-emerald-900/20';
+                                item.innerHTML = `
+                                    <div class="font-bold text-white text-sm">${ev.title}</div>
+                                    <div class="text-xs text-slate-400">${ev.date} | ${ev.venue}</div>
+                                `;
+                                dutiesList.appendChild(item);
+                            });
+                        }
+                    }
+                });
+                
+            // Fetch attendance/logs to count items or activity
+            fetch(`/api/attendance?email=${user.email}`, {
+                headers: {
+                    'X-User-Email': user.email,
+                    'X-User-Password': user.password
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const logs = data.logs;
+                    const itemsHeld = logs.filter(log => log.type === 'check_in').length - logs.filter(log => log.type === 'check_out').length;
+                    
+                    document.getElementById('count-items').innerText = Math.max(0, itemsHeld);
+                    
+                    const circle = document.getElementById('circle-items');
+                    const percent = Math.min(Math.max(0, itemsHeld) / 5, 1); // scale of 5
+                    const offset = 251.2 * (1 - percent);
+                    circle.style.strokeDashoffset = offset;
+                    
+                    // Recent activity
+                    const activityList = document.getElementById('recent-activity');
+                    if (logs.length > 0) {
+                        activityList.innerHTML = '<div class="space-y-2">';
+                        logs.slice(0, 5).forEach(log => {
+                            const item = document.createElement('div');
+                            item.className = 'flex justify-between items-center text-sm border-b border-emerald-900/10 py-2';
+                            item.innerHTML = `
+                                <div>
+                                    <span class="font-medium text-white">${log.event_title}</span>
+                                    <span class="text-slate-500 text-xs ml-2">${new Date(log.timestamp).toLocaleString()}</span>
+                                </div>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${log.type === 'check_in' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}">${log.type === 'check_in' ? 'Check-In' : 'Check-Out'}</span>
+                            `;
+                            activityList.appendChild(item);
+                        });
+                        activityList.innerHTML += '</div>';
+                    }
+                }
+            });
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
+

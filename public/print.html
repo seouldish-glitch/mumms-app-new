@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print QR Stickers - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @media print {
+            body { background: white; color: black; }
+            .no-print { display: none; }
+            .print-break { page-break-after: always; }
+            @page { margin: 0; }
+        }
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        .qr-card {
+            border: 1px dashed #cbd5e1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+    </style>
+</head>
+<body class="p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <div class="flex justify-between items-center no-print">
+            <h1 class="text-2xl font-bold">Print QR Stickers</h1>
+            <div class="flex gap-2">
+                <a href="/inventory" class="bg-slate-500 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">Back to Inventory</a>
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">Print Now</button>
+            </div>
+        </div>
+
+        <div id="print-grid" class="grid grid-cols-3 gap-4">
+            <div class="col-span-3 text-center text-slate-500 py-12">Loading equipment...</div>
+        </div>
+    </div>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || (user.role !== 'MIC' && user.role !== 'President')) {
+            alert("Access denied. Only MIC and President can access this page.");
+            window.location.href = '/home';
+        }
+
+        function loadEquipment() {
+            fetch('/api/equipment')
+                .then(response => response.json())
+                .then(data => {
+                    const grid = document.getElementById('print-grid');
+                    grid.innerHTML = '';
+                    
+                    if (data.success && data.equipment.length > 0) {
+                        data.equipment.forEach((item, index) => {
+                            const customId = item.customId || `TEMP-ID-${index}`;
+                            const displayId = item.customId || 'Missing ID';
+                            
+                            const card = document.createElement('div');
+                            card.className = 'qr-card space-y-2';
+                            card.innerHTML = `
+                                <div class="text-xs font-bold uppercase tracking-wider text-center text-emerald-700">SBC MEDIA</div>
+                                <div class="text-sm font-medium text-center truncate w-full">${item.name}</div>
+                                <div id="qr-${customId}" class="flex justify-center my-2"></div>
+                                <div class="text-xs font-mono text-center text-slate-500">${displayId}</div>
+                            `;
+                            grid.appendChild(card);
+                            
+                            // Generate QR
+                            new QRCode(document.getElementById(`qr-${customId}`), {
+                                text: customId,
+                                width: 120,
+                                height: 120,
+                                colorDark: "#000000",
+                                colorLight: "#ffffff",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+                        });
+                    } else {
+                        grid.innerHTML = '<div class="col-span-3 text-center text-slate-500 py-12">No equipment found.</div>';
+                    }
+                })
+                .catch(err => {
+                    console.error("Error loading equipment:", err);
+                    document.getElementById('print-grid').innerHTML = '<div class="col-span-3 text-center text-red-500 py-12">Error loading equipment.</div>';
+                });
+        }
+
+        loadEquipment();
+    </script>
+</body>
+</html>
+

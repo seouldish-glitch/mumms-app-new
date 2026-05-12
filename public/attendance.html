@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Attendance - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 30% 30%, #061c14 0%, #020504 100%);
+        }
+        .glass-card {
+            background: rgba(4, 10, 8, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(16, 185, 129, 0.1);
+        }
+        .nav-item.active {
+            background: rgba(0, 223, 130, 0.1);
+            color: #00DF82;
+            border-color: rgba(0, 223, 130, 0.2);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-6 flex flex-col items-center">
+
+    <div class="w-full max-w-7xl space-y-8 relative z-10">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-950 border border-emerald-800 rounded-xl px-4 py-3 flex items-center justify-center">
+                    <span class="text-emerald-400 text-xs font-bold tracking-wider">@MEDIA</span>
+                </div>
+                <div>
+                    <h2 class="text-white font-bold text-sm tracking-wide">St. Benedict's College Media</h2>
+                    <p class="text-slate-500 text-xs font-light">Media Unit Management</p>
+                </div>
+                <div class="ml-2">
+                    <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">MUMMS</span>
+                </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="flex items-center gap-4 glass-card px-5 py-3 rounded-2xl border border-emerald-900/30">
+                <div class="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                    <span id="user-avatar">U</span>
+                </div>
+                <div>
+                    <div class="text-sm font-bold text-white" id="current-user-name">Loading...</div>
+                    <div class="text-xs text-emerald-400 font-medium" id="current-user-role">...</div>
+                </div>
+                <button class="text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3 py-1.5 rounded-lg transition-colors ml-2 font-medium border border-emerald-500/20" onclick="logout()">Sign out</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="glass-card rounded-2xl p-2 flex flex-wrap gap-2">
+            <a href="/home" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dashboard</a>
+            <a href="/team" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Our Team</a>
+            <a href="/calendar" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Event Calendar</a>
+            <a href="/attendance" class="nav-item active px-5 py-3 rounded-xl text-sm font-medium text-white transition-colors border">Event Attendance</a>
+            <a href="#" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Inventory</a>
+            <a href="#" class="px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition-colors">Dispatch</a>
+        </div>
+
+        <!-- Attendance Content -->
+        <div class="glass-card rounded-3xl p-8 space-y-6">
+            <div>
+                <span class="text-emerald-400 text-xs font-bold tracking-wider uppercase">Live Workflow</span>
+                <h1 class="text-3xl font-bold text-white mt-1">Event Attendance</h1>
+                <p class="text-slate-400 text-sm mt-1">Track your duty participation by checking in and out of assigned events.</p>
+            </div>
+
+            <div class="space-y-4 max-w-lg">
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-slate-400">Select current event</label>
+                    <select id="event-select" class="w-full bg-black/50 border border-emerald-900/50 rounded-xl py-2.5 px-4 text-white focus:outline-none focus:border-emerald-500 transition-all">
+                        <option value="">Select an event...</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4">
+                    <button id="check-in-btn" disabled class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-black font-bold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                        CHECK-IN
+                    </button>
+                    <button id="check-out-btn" disabled class="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-black font-bold py-3 rounded-xl transition-all duration-300 shadow-lg shadow-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed">
+                        CHECK-OUT
+                    </button>
+                </div>
+                
+                <div id="status-msg" class="text-sm font-medium text-center mt-2"></div>
+            </div>
+        </div>
+        
+        <!-- Attendance Log -->
+        <div class="glass-card rounded-3xl p-8 space-y-4">
+            <h2 class="text-xl font-bold text-white">Your Attendance Log</h2>
+            <div id="log-list" class="space-y-2">
+                <div class="text-slate-500 text-sm">No logs found.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
+        // Load events for dropdown
+        function loadEvents() {
+            fetch('/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('event-select');
+                    if (data.success && data.events.length > 0) {
+                        data.events.forEach(ev => {
+                            // Only show events where user is assigned, unless admin
+                            const isAssigned = ev.assigned_members && ev.assigned_members.includes(user.displayName);
+                            const isAdmin = user.role === 'MIC' || user.role === 'President';
+                            
+                            if (isAssigned || isAdmin) {
+                                const option = document.createElement('option');
+                                option.value = ev.title; // Using title as ID for now, should ideally be _id
+                                option.innerText = `${ev.title} (${ev.date})`;
+                                select.appendChild(option);
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.error("Error loading events:", err));
+        }
+
+        function updateButtonStates(eventTitle) {
+            if (!eventTitle) {
+                document.getElementById('check-in-btn').disabled = true;
+                document.getElementById('check-out-btn').disabled = true;
+                return;
+            }
+            
+            fetch(`/api/attendance?email=${user.email}`, {
+                headers: {
+                    'X-User-Email': user.email,
+                    'X-User-Password': user.password
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const eventLogs = data.logs.filter(log => log.event_title === eventTitle);
+                        if (eventLogs.length > 0) {
+                            const lastLog = eventLogs[0];
+                            if (lastLog.type === 'check_in') {
+                                document.getElementById('check-in-btn').disabled = true;
+                                document.getElementById('check-out-btn').disabled = false;
+                            } else {
+                                document.getElementById('check-in-btn').disabled = false;
+                                document.getElementById('check-out-btn').disabled = true;
+                            }
+                        } else {
+                            document.getElementById('check-in-btn').disabled = false;
+                            document.getElementById('check-out-btn').disabled = true;
+                        }
+                    }
+                })
+                .catch(err => console.error("Error updating button states:", err));
+        }
+
+        document.getElementById('event-select').addEventListener('change', (e) => {
+            updateButtonStates(e.target.value);
+        });
+
+        // Check-in/out actions
+        document.getElementById('check-in-btn').addEventListener('click', () => markAttendance('check_in'));
+        document.getElementById('check-out-btn').addEventListener('click', () => markAttendance('check_out'));
+
+        function markAttendance(type) {
+            const eventTitle = document.getElementById('event-select').value;
+            if (!eventTitle) {
+                alert("Please select an event");
+                return;
+            }
+            
+            const statusMsg = document.getElementById('status-msg');
+            statusMsg.innerText = "Processing...";
+            statusMsg.className = "text-sm font-medium text-center mt-2 text-slate-400";
+            
+            fetch('/api/attendance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    event_title: eventTitle,
+                    email: user.email,
+                    type: type,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusMsg.innerText = `${type === 'check_in' ? 'Checked in' : 'Checked out'} successfully!`;
+                    statusMsg.className = "text-sm font-medium text-center mt-2 text-emerald-400";
+                    loadLogs();
+                    updateButtonStates(eventTitle);
+                } else {
+                    statusMsg.innerText = data.message || "Failed to mark attendance";
+                    statusMsg.className = "text-sm font-medium text-center mt-2 text-red-400";
+                }
+            })
+            .catch(err => {
+                console.error("Error marking attendance:", err);
+                statusMsg.innerText = "Network error.";
+                statusMsg.className = "text-sm font-medium text-center mt-2 text-red-400";
+            });
+        }
+
+        // Load logs
+        function loadLogs() {
+            fetch(`/api/attendance?email=${user.email}`, {
+                headers: {
+                    'X-User-Email': user.email,
+                    'X-User-Password': user.password
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('log-list');
+                    list.innerHTML = '';
+                    if (data.success && data.logs.length > 0) {
+                        data.logs.forEach(log => {
+                            const item = document.createElement('div');
+                            item.className = 'bg-black/30 p-4 rounded-xl border border-emerald-900/20 flex justify-between items-center';
+                            item.innerHTML = `
+                                <div>
+                                    <div class="font-bold text-white">${log.event_title}</div>
+                                    <div class="text-xs text-slate-400">${new Date(log.timestamp).toLocaleString()}</div>
+                                </div>
+                                <div class="px-3 py-1 rounded-full text-xs font-semibold ${log.type === 'check_in' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-orange-500/10 text-orange-300 border-orange-500/20'} border w-fit">
+                                    ${log.type === 'check_in' ? 'Checked In' : 'Checked Out'}
+                                </div>
+                            `;
+                            list.appendChild(item);
+                        });
+                    } else {
+                        list.innerHTML = '<div class="text-slate-500 text-sm">No logs found.</div>';
+                    }
+                })
+                .catch(err => console.error("Error loading logs:", err));
+        }
+
+        // Initial load
+        loadEvents();
+        loadLogs();
+    </script>
+</body>
+</html>
+
