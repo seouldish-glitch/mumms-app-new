@@ -126,8 +126,12 @@
                 </div>
                 
                 <div class="flex justify-center gap-2">
-                    <button id="start-btn" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/20 text-sm font-medium" onclick="startScanner()">Start Camera</button>
+                    <button id="start-btn" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-lg border border-emerald-500/20 text-sm font-medium flex items-center gap-2" onclick="startScanner()">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        Start Camera
+                    </button>
                     <button id="stop-btn" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-lg border border-red-500/20 text-sm font-medium hidden" onclick="stopScanner()">Stop Camera</button>
+                    <button id="torch-btn" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-4 py-2 rounded-lg border border-amber-500/20 text-sm font-medium hidden" onclick="toggleTorch()">🔦 Torch</button>
                 </div>
             </div>
 
@@ -149,7 +153,7 @@
                     <!-- Checked Out Items List (Visible in Return mode) -->
                     <div id="checked-out-list-container" class="hidden space-y-2">
                         <label class="text-xs text-slate-500 uppercase font-bold tracking-wider">Your Checked Out Items</label>
-                        <div id="checked-out-list" class="bg-black/30 border border-emerald-900/30 rounded-xl p-3 text-sm space-y-2">
+                        <div id="checked-out-list" class="bg-black/30 border border-emerald-900/30 rounded-xl p-3 text-sm space-y-2 max-h-40 overflow-y-auto no-scrollbar">
                             <div class="text-slate-500 text-xs">Loading your items...</div>
                         </div>
                     </div>
@@ -219,6 +223,28 @@
             document.getElementById('loading-overlay').classList.add('hidden');
         }
 
+        // Web Audio API Beep
+        function playScanBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            } catch (e) {
+                console.warn("Audio feedback failed:", e);
+            }
+        }
+
         // Check login
         const user = JSON.parse(localStorage.getItem('user'));
         if (user) {
@@ -243,6 +269,7 @@
 
         let mode = 'checkout'; // or 'return'
         let html5QrCode;
+        let isTorchOn = false;
 
         function setMode(newMode) {
             mode = newMode;
@@ -272,22 +299,39 @@
             document.getElementById('stop-btn').classList.remove('hidden');
             
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
+            const config = { fps: 20, qrbox: { width: 250, height: 250 } };
             
             html5QrCode.start(
                 { facingMode: "environment" }, 
                 config, 
                 (decodedText) => {
+                    // Success Feedback
+                    playScanBeep();
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    
+                    // Visual feedback
+                    const scannerDiv = document.querySelector('.aspect-square');
+                    scannerDiv.classList.add('border-emerald-400', 'border-4');
+                    setTimeout(() => scannerDiv.classList.remove('border-emerald-400', 'border-4'), 500);
+
                     document.getElementById('equipment-id').value = decodedText;
                     stopScanner();
-                    showModal("Scanned", `Equipment ID: ${decodedText}`);
+                    
+                    // Small toast notification instead of intrusive modal if possible, but keeping modal for now as it was there
+                    showModal("Protocol Detected", `Asset ID: ${decodedText}\nScanning successful.`);
                 },
                 (errorMessage) => {
                     // Ignore errors during scan
                 }
-            ).catch((err) => {
+            ).then(() => {
+                // Check for torch support
+                const capabilities = html5QrCode.getCameraCapabilities();
+                if (capabilities.torch) {
+                    document.getElementById('torch-btn').classList.remove('hidden');
+                }
+            }).catch((err) => {
                 console.error("Error starting scanner:", err);
-                showModal("Error", "Could not access camera.");
+                showModal("Access Denied", "Camera protocol could not be initialized. Please check permissions.");
                 stopScanner();
             });
         }
@@ -297,10 +341,27 @@
                 html5QrCode.stop().then(() => {
                     document.getElementById('start-btn').classList.remove('hidden');
                     document.getElementById('stop-btn').classList.add('hidden');
+                    document.getElementById('torch-btn').classList.add('hidden');
+                    isTorchOn = false;
                 });
             } else {
                 document.getElementById('start-btn').classList.remove('hidden');
                 document.getElementById('stop-btn').classList.add('hidden');
+                document.getElementById('torch-btn').classList.add('hidden');
+            }
+        }
+
+        async function toggleTorch() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                isTorchOn = !isTorchOn;
+                try {
+                    await html5QrCode.applyVideoConstraints({
+                        advanced: [{ torch: isTorchOn }]
+                    });
+                    document.getElementById('torch-btn').innerText = isTorchOn ? '🔦 Torch Off' : '🔦 Torch On';
+                } catch (err) {
+                    console.error("Torch error:", err);
+                }
             }
         }
 
