@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Lost - 404</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .glitch-text {
+            text-shadow: 2px 0 #00DF82, -2px 0 #ff00c1;
+            animation: glitch 2s infinite linear alternate-reverse;
+        }
+        @keyframes glitch {
+            0% { text-shadow: 2px 0 #00DF82, -2px 0 #ff00c1; }
+            50% { text-shadow: -2px 0 #00DF82, 2px 0 #ff00c1; }
+            100% { text-shadow: 2px 0 #00DF82, -2px 0 #ff00c1; }
+        }
+        .scanner-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00DF82, transparent);
+            position: absolute;
+            width: 100%;
+            top: 0;
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-bg-dark text-white min-h-screen flex items-center justify-center p-6 overflow-hidden">
+    
+    <!-- Ambient Background Blobs -->
+    <div class="fixed top-0 left-0 w-full h-full pointer-events-none -z-10">
+        <div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style="animation-delay: 2s"></div>
+    </div>
+
+    <main class="max-w-lg w-full text-center space-y-12 relative">
+        <!-- 404 Visual -->
+        <div class="relative inline-block">
+            <h1 class="text-[12rem] font-black leading-none tracking-tighter opacity-10 select-none">404</h1>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="glass p-8 rounded-3xl border-primary/20 shadow-2xl relative overflow-hidden group">
+                    <div class="scanner-line opacity-30"></div>
+                    <img src="/media-logo.png" alt="MUMMS" class="w-20 h-20 rounded-3xl border border-primary/20 object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-4xl font-bold glitch-text">Signal Lost</h2>
+            <p class="text-slate-400 text-lg leading-relaxed">
+                The coordinates you requested do not exist in the MUMMS grid. <br class="hidden md:block"> 
+                Access point has been terminated or moved.
+            </p>
+        </div>
+
+        <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+            <a href="/home" class="btn-primary px-8 py-4 flex items-center gap-3 group">
+                <i data-lucide="home" class="w-5 h-5 group-hover:-translate-y-0.5 transition-transform"></i>
+                <span class="text-xs uppercase font-bold tracking-[0.2em]">Return to Base</span>
+            </a>
+            <button onclick="history.back()" class="glass px-8 py-4 border-white/10 hover:border-white/20 text-slate-300 hover:text-white transition-all flex items-center gap-3 group">
+                <i data-lucide="arrow-left" class="w-5 h-5 group-hover:-translate-x-1 transition-transform"></i>
+                <span class="text-xs uppercase font-bold tracking-[0.2em]">Previous Sector</span>
+            </button>
+        </div>
+
+        <div class="pt-12">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+                <span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Protocol 404: Route Not Found</span>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
