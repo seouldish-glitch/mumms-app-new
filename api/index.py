@@ -15,21 +15,16 @@ except ImportError:
     print("\n[CRITICAL] 'dnspython' module not found! This is required for MongoDB Atlas connections.")
     print("Please run: pip install dnspython\n")
 
-# api/ directory (where this file lives)
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-# public/ directory (one level up from api/)
 public_dir = os.path.abspath(os.path.join(basedir, '..', 'public'))
 
 app = Flask(__name__, static_folder=public_dir, template_folder=public_dir, static_url_path='')
 
-# Serve static assets from the public/ folder
 def get_asset(filename):
-    # Search candidate directories in priority order
     candidates = [
-        public_dir,                                   # resolved relative path (local + Vercel)
-        os.path.join(os.getcwd(), 'public'),          # cwd-relative fallback
-        '/var/task/public',                            # Vercel absolute fallback
+        public_dir,
+        os.path.join(os.getcwd(), 'public'),
+        '/var/task/public',
     ]
     for directory in candidates:
         full_path = os.path.join(directory, filename)
@@ -57,12 +52,10 @@ def debug_dir():
     })
 
 def is_authenticated():
-    # Check cookie
     token = request.cookies.get('auth_token')
     if token and verify_token(token):
         return True
         
-    # Check Authorization header
     if 'Authorization' in request.headers:
         auth_header = request.headers['Authorization']
         if auth_header.startswith('Bearer '):
@@ -75,14 +68,10 @@ def is_authenticated():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_any(path):
-    # Normalize path
     path = path.rstrip('/')
-    # Normalize path for checking
     check_path = f"/{path}" if path else "/"
     
-    # Public paths that don't need login
     public_paths = ['/api/login', '/login', '/login.html', '/sitemap.xml', '/robots.txt']
-    # Allow static assets
     allowed_exts = ['.css', '.js', '.png', '.jpg', '.jpeg', '.svg', '.ico', '.txt']
     
     is_public = check_path in public_paths or any(check_path.endswith(ext) for ext in allowed_exts)
@@ -100,13 +89,11 @@ def serve_any(path):
         except Exception as e:
             return error_404(e)
         
-    # Handle the login path specifically
     if path == 'login' or path == 'login.html':
         if is_authenticated():
             return redirect('/home')
         return get_asset('login.html')
 
-    # Handle admin path specifically
     if path == 'admin' or path == 'admin.html':
         if not is_authenticated():
             return redirect('/login')
@@ -115,22 +102,18 @@ def serve_any(path):
             return redirect('/home')
         return get_asset('admin.html')
 
-    # Handle logout
     if path == 'logout':
         response = make_response(redirect('/login'))
         response.delete_cookie('user_email', path='/')
         response.delete_cookie('user_role', path='/')
         return response
 
-    # If it's an API call, return 401 if not authenticated
     if path.startswith('api/') and not is_authenticated():
         return jsonify({"success": False, "message": "Authentication required"}), 401
 
-    # Handle all other pages
     if not is_public and not is_authenticated():
         return redirect('/login')
 
-    # Handle clean URLs by appending .html if it doesn't have an extension
     if '.' not in path and not path.startswith('api/'):
         full_path = f"{path}.html"
     else:
@@ -150,16 +133,11 @@ def error_404(e):
 
 @app.route('/sitemap.xml')
 def sitemap():
-    pages = []
-    # Dynamic list of pages
     static_pages = ['home.html', 'team.html', 'calendar.html', 'attendance.html', 'inventory.html', 'dispatch.html', 'login.html', 'admin.html']
-    
     import datetime
     now = datetime.datetime.now().strftime("%Y-%m-%d")
-    
     xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
-    
     for page in static_pages:
         url = page.replace('.html', '') if page != 'index.html' else ''
         xml.append('  <url>')
@@ -167,7 +145,6 @@ def sitemap():
         xml.append(f'    <lastmod>{now}</lastmod>')
         xml.append('    <priority>0.8</priority>')
         xml.append('  </url>')
-    
     xml.append('</urlset>')
     return "\n".join(xml), 200, {'Content-Type': 'application/xml'}
 
@@ -178,10 +155,7 @@ def robots():
 MONGO_URI = os.environ.get("MONGODB_URI") or "mongodb+srv://zenitha2026_db_user:XcTad72Wsa1pLufY@cluster0.la5cscc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0&readPreference=primaryPreferred"
 SECRET_KEY = os.environ.get("SECRET_KEY") or "mumm-super-secret-2026-key-!@#"
 
-# --- Token Management ---
 def generate_token(payload):
-    # payload is a dict (e.g. {"email": "...", "role": "..."})
-    # Add expiration (7 days)
     payload['exp'] = (datetime.datetime.now() + datetime.timedelta(days=7)).timestamp()
     payload_str = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip('=')
     signature = hmac.new(SECRET_KEY.encode(), payload_str.encode(), hashlib.sha256).digest()
@@ -192,20 +166,14 @@ def verify_token(token):
     if not token: return None
     try:
         payload_str, sig_str = token.split('.')
-        # Verify signature
         expected_sig = hmac.new(SECRET_KEY.encode(), payload_str.encode(), hashlib.sha256).digest()
         expected_sig_str = base64.urlsafe_b64encode(expected_sig).decode().rstrip('=')
         if not hmac.compare_digest(sig_str, expected_sig_str):
             return None
-        
-        # Decode payload
         padding = '=' * (4 - len(payload_str) % 4)
         payload = json.loads(base64.urlsafe_b64decode(payload_str + padding).decode())
-        
-        # Check expiration
         if datetime.datetime.now().timestamp() > payload.get('exp', 0):
             return None
-            
         return payload
     except:
         return None
@@ -214,37 +182,27 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        # Check Authorization header
         if 'Authorization' in request.headers:
             auth_header = request.headers['Authorization']
             if auth_header.startswith('Bearer '):
                 token = auth_header.split(" ")[1]
-        
-        # Fallback to cookie for browser simplicity
         if not token and 'auth_token' in request.cookies:
             token = request.cookies.get('auth_token')
-            
         user_data = verify_token(token)
         if not user_data:
             return jsonify({"success": False, "message": "Token is missing or invalid"}), 401
-            
-        # Add user_data to request for use in route
         request.user = user_data
         return f(*args, **kwargs)
     return decorated
 
-# Persistent connection pool — created once, reused across all requests
 _mongo_client = None
-
 import traceback
 
 def get_db():
     global _mongo_client
     if _mongo_client is None:
         try:
-            # Using primaryPreferred to allow reads during elections/outages
             _mongo_client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10000)
-            # No ping here, as it may force a Primary selection
         except Exception as e:
             print(f"FAILED TO CONNECT TO MONGODB: {e}")
             traceback.print_exc()
@@ -268,7 +226,6 @@ def verify_captcha(response_token):
             'secret': RECAPTCHA_SECRET,
             'response': response_token
         }).encode('utf-8')
-        
         req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode())
@@ -283,32 +240,24 @@ def login():
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
     email = data.get('email')
     password = data.get('password')
     captcha = data.get('captcha')
-    
     if not email or not password or not captcha:
         return jsonify({"success": False, "message": "Missing credentials or captcha"}), 400
-        
     if not verify_captcha(captcha):
         return jsonify({"success": False, "message": "reCAPTCHA verification failed"}), 401
-        
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
-        # Find user with matching email and password
         user = collection.find_one({"email": email, "password": password}, {"_id": 0})
         if user:
-            # Generate session token
             token = generate_token({
                 "email": user['email'],
                 "role": user.get('role', 'Member'),
                 "displayName": user.get('displayName', user['email'])
             })
-            
             response = make_response(jsonify({
                 "success": True, 
                 "token": token,
@@ -318,12 +267,9 @@ def login():
                     "displayName": user.get('displayName', user['email'])
                 }
             }))
-            
-            # Set cookies for browser navigations (httponly for security)
             response.set_cookie('auth_token', token, httponly=True, max_age=604800, path='/', samesite='Lax')
             response.set_cookie('user_email', user['email'], max_age=604800, path='/', samesite='Lax')
             response.set_cookie('user_role', user.get('role', 'Member'), max_age=604800, path='/', samesite='Lax')
-            
             return response, 200
         else:
             return jsonify({"success": False, "message": "Invalid email or password"}), 401
@@ -336,23 +282,16 @@ def change_password():
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
     current_password = data.get('currentPassword')
     new_password = data.get('newPassword')
-    
     if not current_password or not new_password:
         return jsonify({"success": False, "message": "Missing current or new password"}), 400
-        
     email = request.user.get('email')
     collection = get_collection("users")
-    
     try:
-        # Verify current password
         user = collection.find_one({"email": email, "password": current_password})
         if not user:
             return jsonify({"success": False, "message": "Incorrect current password"}), 401
-            
-        # Update to new password
         collection.update_one({"email": email}, {"$set": {"password": new_password}})
         return jsonify({"success": True, "message": "Password updated successfully"}), 200
     except Exception as e:
@@ -371,10 +310,8 @@ def get_item():
     qr_id = request.args.get('qrId')
     if not qr_id:
         return jsonify({"success": False, "message": "Missing qrId parameter"}), 400
-    
-    collection = get_collection("equipment") # Using 'equipment' collection from your image
+    collection = get_collection("equipment")
     if collection is None:
-        # Fallback to mock data for local testing if DB fails
         return jsonify({
             "success": True, 
             "data": {
@@ -384,17 +321,15 @@ def get_item():
             },
             "message": "Fallback to mock data (DB connection failed)"
         }), 200
-        
     try:
-        # Query MongoDB for this ID, exclude the _id field
         item = collection.find_one({"customId": qr_id}, {"_id": 0})
-        
         if item:
             return jsonify({"success": True, "data": item}), 200
         else:
             return jsonify({"success": False, "message": "Item not found in inventory"}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
 @app.route('/api/equipment', methods=['GET'])
 def get_all_equipment():
     collection = get_collection("equipment")
@@ -405,7 +340,6 @@ def get_all_equipment():
         query = {}
         if current_user:
             query["current_user"] = current_user
-            
         items = list(collection.find(query, {"_id": 0}))
         return jsonify({"success": True, "equipment": items}), 200
     except Exception as e:
@@ -414,7 +348,6 @@ def get_all_equipment():
 @app.route('/api/users', methods=['GET'])
 @token_required
 def get_users():
-    # Only MIC/President can see full user list
     if request.user.get('role') not in ('MIC', 'President'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     collection = get_collection("users")
@@ -449,15 +382,9 @@ def create_event():
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
-    user_role = data.get('user_role')
-    if user_role not in ['MIC', 'President']:
-        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can assign duties."}), 403
-        
     collection = get_collection("events")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         event = {
             "title": data.get('title'),
@@ -466,12 +393,9 @@ def create_event():
             "status": data.get('status', 'Planned'),
             "assigned_members": data.get('assigned_members', [])
         }
-        
         collection.insert_one(event)
-        
         if '_id' in event:
             event.pop('_id')
-            
         return jsonify({"success": True, "event": event}), 201
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -481,14 +405,9 @@ def create_event():
 def delete_event(event_id):
     if request.user.get('role') not in ('MIC', 'President'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
-    user_role = request.args.get('user_role')
-    if user_role not in ['MIC', 'President']:
-        return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     collection = get_collection("events")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         from bson.objectid import ObjectId
         result = collection.delete_one({"_id": ObjectId(event_id)})
@@ -507,15 +426,9 @@ def update_event(event_id):
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
-    user_role = data.get('user_role')
-    if user_role not in ['MIC', 'President']:
-        return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     collection = get_collection("events")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         from bson.objectid import ObjectId
         update_data = {
@@ -526,7 +439,6 @@ def update_event(event_id):
             "assigned_members": data.get('assigned_members')
         }
         update_data = {k: v for k, v in update_data.items() if v is not None}
-        
         result = collection.update_one({"_id": ObjectId(event_id)}, {"$set": update_data})
         if result.matched_count > 0:
             return jsonify({"success": True}), 200
@@ -540,19 +452,15 @@ def update_event(event_id):
 def register_user():
     if request.user.get('role') not in ('MIC', 'President'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         if collection.find_one({"email": data.get('email')}):
             return jsonify({"success": False, "message": "User already exists"}), 400
-            
         user = {
             "email": data.get('email'),
             "password": data.get('password'),
@@ -569,11 +477,9 @@ def register_user():
 def delete_user(email):
     if request.user.get('role') not in ('MIC', 'President'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         result = collection.delete_one({"email": email})
         if result.deleted_count > 0:
@@ -584,19 +490,16 @@ def delete_user(email):
         return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/api/users/<email>', methods=['PUT'])
+@token_required
 def update_user_role(email):
+    if request.user.get('role') not in ('MIC', 'President'):
+        return jsonify({"success": False, "message": "Permission denied"}), 403
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
-    user_role = data.get('admin_role')
-    if user_role not in ['MIC', 'President']:
-        return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         result = collection.update_one({"email": email}, {"$set": {"role": data.get('role')}})
         if result.matched_count > 0:
@@ -605,50 +508,38 @@ def update_user_role(email):
             return jsonify({"success": False, "message": "User not found"}), 404
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
+
 @app.route('/api/attendance', methods=['POST'])
 def mark_attendance():
     from datetime import datetime, timezone
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
     email = data.get('email')
     event_title = data.get('event_title')
     action_type = data.get('type')
-    
     if not email or not event_title or not action_type:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
-    if action_type not in ('check_in', 'check_out'):
-        return jsonify({"success": False, "message": "Invalid action type"}), 400
-
     collection = get_collection("attendance")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
-        # Use server-side datetime for reliable sorting (never trust client timestamps)
         server_ts = datetime.now(timezone.utc)
-
-        # Fetch the user's single most-recent log
         logs = list(collection.find({"email": email}).sort("timestamp", -1).limit(1))
         last_log = logs[0] if logs else None
-        
         is_active = last_log is not None and last_log.get('type') == 'check_in'
         active_event = last_log.get('event_title') if is_active else None
-
         if action_type == 'check_in':
             if is_active:
                 if active_event == event_title:
                     return jsonify({"success": False, "message": "Already checked in to this event"}), 409
                 else:
                     return jsonify({"success": False, "message": f"Already checked in to: {active_event}. Check out first."}), 409
-        
         elif action_type == 'check_out':
             if not is_active:
                 return jsonify({"success": False, "message": "You are not currently checked in to any event"}), 409
             if active_event != event_title:
                 return jsonify({"success": False, "message": f"Check-out failed: you are checked in to '{active_event}', not this event"}), 409
-
         collection.insert_one({
             "event_title": event_title,
             "email": email,
@@ -659,36 +550,13 @@ def mark_attendance():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-
 @app.route('/api/attendance/status', methods=['GET'])
+@token_required
 def get_attendance_status():
-    """Lightweight endpoint: returns the current check-in state for a user.
-    Used by the frontend to determine button states without fetching all logs."""
-    requester_email = request.headers.get('X-User-Email')
-    requester_password = request.headers.get('X-User-Password')
-    target_email = request.args.get('email')
-
-    if not requester_email or not requester_password:
-        return jsonify({"success": False, "message": "Missing credentials"}), 401
-
-    users_coll = get_collection("users")
-    if users_coll is None:
-        return jsonify({"success": False, "message": "Database connection error"}), 500
-
-    requester = users_coll.find_one({"email": requester_email, "password": requester_password})
-    if not requester:
-        return jsonify({"success": False, "message": "Invalid credentials"}), 401
-
-    # Non-admins can only query their own status
-    if requester.get('role') not in ('MIC', 'President'):
-        target_email = requester_email
-    elif not target_email:
-        target_email = requester_email
-
+    target_email = request.args.get('email') or request.user.get('email')
     collection = get_collection("attendance")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-
     try:
         logs = list(collection.find({"email": target_email}).sort("timestamp", -1).limit(1))
         last_log = logs[0] if logs else None
@@ -702,29 +570,22 @@ def get_attendance_status():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
-
 @app.route('/api/attendance', methods=['GET'])
 @token_required
 def get_attendance():
-    # Use request.user from token
     requester_email = request.user.get('email')
     requester_role = request.user.get('role')
-    
     target_email = request.args.get('email')
-    
     if requester_role not in ('MIC', 'President'):
         if target_email and target_email != requester_email:
             return jsonify({"success": False, "message": "Permission denied"}), 403
         target_email = requester_email
-        
     collection = get_collection("attendance")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         query = {"email": target_email} if target_email else {}
         logs = list(collection.find(query, {"_id": 0}).sort("timestamp", -1))
-        # Convert datetime objects to ISO strings for JSON serialisation
         for log in logs:
             if hasattr(log.get('timestamp'), 'isoformat'):
                 log['timestamp'] = log['timestamp'].isoformat()
@@ -737,11 +598,9 @@ def get_attendance():
 def get_dispatch():
     if request.user.get('role') not in ['MIC', 'President']:
         return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     collection = get_collection("dispatch")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
         logs = list(collection.find({}, {"_id": 0}).sort("timestamp", -1))
         return jsonify({"success": True, "logs": logs}), 200
@@ -753,29 +612,23 @@ def dispatch_item():
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
-        
     custom_id = data.get('customId')
     action_type = data.get('type')
     member = data.get('member')
     purpose = data.get('purpose')
     timestamp = data.get('timestamp')
-    
     try:
         equip_coll = get_collection("equipment")
         if equip_coll is None:
             return jsonify({"success": False, "message": "Database connection error"}), 500
-            
         update_data = {"status": "checked_out" if action_type == 'checkout' else 'available'}
         if action_type == 'checkout':
             update_data["current_user"] = member
         else:
             update_data["current_user"] = None
-            
         result = equip_coll.update_one({"customId": custom_id}, {"$set": update_data})
-        
         if result.matched_count == 0:
             return jsonify({"success": False, "message": "Item not found"}), 404
-            
         dispatch_coll = get_collection("dispatch")
         dispatch_coll.insert_one({
             "customId": custom_id,
@@ -784,7 +637,6 @@ def dispatch_item():
             "purpose": purpose,
             "timestamp": timestamp
         })
-        
         return jsonify({"success": True}), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -794,13 +646,10 @@ def dispatch_item():
 def get_active_equipment():
     if request.user.get('role') not in ['MIC', 'President']:
         return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     equip_coll = get_collection("equipment")
     if equip_coll is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
-        
     try:
-        # Find all items that are NOT available
         active_items = list(equip_coll.find({"status": {"$ne": "available"}}, {"_id": 0}))
         return jsonify({"success": True, "items": active_items}), 200
     except Exception as e:
@@ -811,42 +660,30 @@ def get_active_equipment():
 def track_equipment():
     if request.user.get('role') not in ['MIC', 'President']:
         return jsonify({"success": False, "message": "Permission denied"}), 403
-        
     try:
         custom_id = request.args.get('id')
         if not custom_id:
             return jsonify({"success": False, "message": "ID parameter required"}), 400
-            
         equip_coll = get_collection("equipment")
         item = equip_coll.find_one({"customId": custom_id}, {"_id": 0})
-        
         if not item:
             return jsonify({"success": False, "message": "Equipment not found"}), 404
-            
-        # Get logs from attendance (missions)
         att_coll = get_collection("attendance")
         att_logs = list(att_coll.find({"qr_id": custom_id}, {"_id": 0}).sort("timestamp", -1))
-        
-        # Get logs from dispatch (manual)
         disp_coll = get_collection("dispatch")
         disp_logs = list(disp_coll.find({"customId": custom_id}, {"_id": 0}).sort("timestamp", -1))
-        
-        # Format timestamps
         for l in att_logs:
             if hasattr(l.get('timestamp'), 'isoformat'):
                 l['timestamp'] = l['timestamp'].isoformat()
-        
-        # Usage stats
         total_uses = len([l for l in att_logs if l.get('type') == 'check_in']) + \
                      len([l for l in disp_logs if l.get('type') == 'checkout'])
-        
         return jsonify({
             "success": True,
             "item": item,
             "stats": {
                 "total_uses": total_uses,
-                "attendance_logs": att_logs[:10], # Last 10
-                "dispatch_logs": disp_logs[:10]   # Last 10
+                "attendance_logs": att_logs[:10],
+                "dispatch_logs": disp_logs[:10]
             }
         }), 200
     except Exception as e:

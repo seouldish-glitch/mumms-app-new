@@ -10,28 +10,23 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         body { padding-bottom: 0 !important; }
-
         .hero-text {
             background: linear-gradient(135deg, #ffffff 30%, rgba(255,255,255,0.35) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-
         .blob { position: fixed; border-radius: 50%; pointer-events: none; filter: blur(80px); }
         .blob-tl { top: -15%; left: -15%; width: 55vw; height: 55vw; max-width: 520px; max-height: 520px; background: rgba(0,223,130,0.07); }
         .blob-br { bottom: -15%; right: -15%; width: 55vw; height: 55vw; max-width: 520px; max-height: 520px; background: rgba(0,223,130,0.05); }
-
         @keyframes spin-slow { to { transform: rotate(360deg); } }
         .spinner { animation: spin-slow 0.75s linear infinite; }
-
         @keyframes shake {
             0%,100% { transform: translateX(0); }
             20%,60%  { transform: translateX(-7px); }
             40%,80%  { transform: translateX(7px); }
         }
         .shake { animation: shake 0.38s ease-out; }
-
         #error-bar {
             display: none;
             align-items: center;
@@ -45,17 +40,14 @@
             font-weight: 600;
             line-height: 1.4;
         }
-
         @media (max-width: 640px) {
             .login-card { padding: 1.75rem 1.25rem !important; }
         }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 animate-fade">
-
     <div class="blob blob-tl"></div>
     <div class="blob blob-br"></div>
-
     <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
         <div class="hidden lg:flex flex-col space-y-10">
             <div class="flex items-center gap-4">
@@ -90,7 +82,6 @@
                 </div>
             </div>
         </div>
-
         <div class="flex justify-center w-full">
             <div id="login-card" class="login-card glass w-full max-w-[460px] p-10 space-y-8 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-40 h-40 bg-primary/10 blur-3xl rounded-full -mr-20 -mt-20 pointer-events-none"></div>
@@ -101,14 +92,11 @@
                         <p class="text-slate-500 text-[9px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
                     </div>
                 </div>
-
                 <div class="space-y-1 relative z-10">
                     <h2 class="text-3xl font-bold text-white">Welcome back</h2>
                     <p class="text-slate-500 text-sm">Sign in to your media unit account.</p>
                 </div>
-
                 <div id="error-bar" role="alert" class="relative z-10"></div>
-
                 <form id="login-form" class="space-y-5 relative z-10" novalidate>
                     <div class="space-y-2">
                         <label for="email" class="text-[10px] uppercase tracking-widest font-bold text-slate-400 ml-1">Email Address</label>
@@ -119,7 +107,6 @@
                                    class="input-field pl-12 bg-white/5 border-white/10">
                         </div>
                     </div>
-
                     <div class="space-y-2">
                         <label for="password" class="text-[10px] uppercase tracking-widest font-bold text-slate-400 ml-1">Password</label>
                         <div class="relative">
@@ -133,32 +120,26 @@
                             </button>
                         </div>
                     </div>
-
                     <div class="flex justify-center py-2">
                         <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" data-theme="dark"></div>
                     </div>
-
                     <button type="submit" id="login-btn"
                             class="btn-primary w-full py-4 text-sm uppercase tracking-widest font-bold mt-2 gap-2">
                         <span id="btn-text">Sign In</span>
                         <i data-lucide="arrow-right" id="btn-icon" class="w-4 h-4"></i>
                     </button>
                 </form>
-
                 <p class="text-center text-slate-500 text-xs relative z-10">
                     No account? <a href="#" class="text-primary font-bold hover:underline">Contact Administrator</a>
                 </p>
             </div>
         </div>
     </div>
-
     <script>
         lucide.createIcons();
-
         if (JSON.parse(localStorage.getItem('user'))) {
             window.location.href = '/home';
         }
-
         document.getElementById('toggle-pw').addEventListener('click', () => {
             const pw  = document.getElementById('password');
             const eye = document.getElementById('pw-eye');
@@ -167,7 +148,6 @@
             eye.setAttribute('data-lucide', show ? 'eye-off' : 'eye');
             lucide.createIcons();
         });
-
         function showError(msg) {
             const bar = document.getElementById('error-bar');
             bar.style.display = 'flex';
@@ -178,7 +158,6 @@
             void card.offsetWidth;
             card.classList.add('shake');
         }
-
         function resetBtn() {
             const btn     = document.getElementById('login-btn');
             const btnText = document.getElementById('btn-text');
@@ -189,35 +168,28 @@
             btnIcon.classList.remove('spinner');
             lucide.createIcons();
         }
-
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             document.getElementById('error-bar').style.display = 'none';
-
             const email    = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const captcha = grecaptcha.getResponse();
-
             if (!email || !password) {
                 showError('Please enter your email and password.');
                 return;
             }
-
             if (!captcha) {
                 showError("Please verify that you are human.");
                 return;
             }
-
             const btn     = document.getElementById('login-btn');
             const btnText = document.getElementById('btn-text');
             const btnIcon = document.getElementById('btn-icon');
-
             btn.disabled      = true;
             btnText.innerText = 'Signing in…';
             btnIcon.setAttribute('data-lucide', 'loader');
             btnIcon.classList.add('spinner');
             lucide.createIcons();
-
             try {
                 const res  = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -225,7 +197,6 @@
                     body: JSON.stringify({ email, password, captcha })
                 });
                 const data = await res.json();
-
                 if (data.success) {
                     localStorage.setItem('user', JSON.stringify(data.user));
                     localStorage.setItem('auth_token', data.token);

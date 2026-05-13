@@ -22,6 +22,34 @@
                 line-height: 1.2;
             }
         }
+        .mobile-brand-header {
+            display: none;
+            padding: 1.5rem;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        @media (max-width: 768px) {
+            .mobile-brand-header { display: flex; }
+        }
+        .toast-status {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 100000;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .toast-status.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body class="animate-fade">
@@ -62,9 +90,21 @@
         </div>
     </nav>
 
+    <div id="toast" class="toast-status glass">
+        <i id="toast-icon" data-lucide="info"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <div class="mobile-brand-header">
+        <img src="/media-logo.png" alt="MUMMS" class="w-12 h-12 rounded-2xl border border-primary/20 object-cover">
+        <div>
+            <h1 class="text-white font-bold text-lg tracking-tight">MUMMS</h1>
+            <p class="text-primary text-[10px] uppercase font-bold tracking-[0.2em]">St. Benedict's Media</p>
+        </div>
+    </div>
+
     <main class="container space-y-8">
         
-        <!-- Welcome Hero Section -->
         <section class="glass hero-section p-8 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden relative">
             <div class="relative z-10 w-full md:w-auto">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest mb-4">
@@ -81,13 +121,10 @@
             <div class="w-32 h-32 bg-primary/20 rounded-full blur-3xl absolute -right-10 -bottom-10"></div>
         </section>
 
-        <!-- Main Dashboard Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            <!-- Left: Stats & Metrics -->
             <div class="lg:col-span-2 space-y-8">
                 
-                <!-- Quick Stats Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="glass stat-card p-6 flex items-center justify-between">
                         <div>
@@ -122,11 +159,10 @@
                     </div>
                 </div>
 
-                <!-- Active Equipment -->
                 <section class="glass p-6">
                     <div class="flex items-center justify-between mb-6">
                         <img src="/media-logo.png" alt="MUMMS Logo" class="h-8 w-8 mr-2 rounded-full" />
-                <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3">
                             <i data-lucide="briefcase" class="text-primary"></i>
                             <h3 class="text-xl font-bold">Currently Assigned</h3>
                         </div>
@@ -140,10 +176,8 @@
                 </section>
             </div>
 
-            <!-- Right: Schedule & Activity -->
             <div class="space-y-8">
                 
-                <!-- Upcoming Duties -->
                 <section class="glass p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <i data-lucide="clock" class="text-primary"></i>
@@ -154,7 +188,6 @@
                     </div>
                 </section>
 
-                <!-- Recent Activity -->
                 <section class="glass p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <i data-lucide="activity" class="text-primary"></i>
@@ -165,7 +198,6 @@
                     </div>
                 </section>
 
-                <!-- Security Settings -->
                 <section class="glass p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <i data-lucide="lock" class="text-primary"></i>
@@ -181,7 +213,6 @@
                             <input type="password" id="new-pass" class="input-field" placeholder="••••••••">
                         </div>
                         <button onclick="changePassword()" class="btn-primary w-full py-3 text-[10px] uppercase font-bold tracking-widest">Update Password</button>
-                        <p id="password-status" class="hidden text-center text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg"></p>
                     </div>
                 </section>
             </div>
@@ -191,18 +222,16 @@
     <script>
         lucide.createIcons();
 
-        // Load user from localStorage
         const user = JSON.parse(localStorage.getItem('user'));
-
-        if (user) {
+        if (!user) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('profile-name').innerText = user.displayName ? user.displayName.split(' ')[0] : 'Member';
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
-
-            const initials = user.displayName
-                ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase()
-                : 'U';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
-            document.getElementById('profile-name').innerText = user.displayName.split(' ')[0] || 'User';
 
             if (user.role === 'MIC' || user.role === 'President') {
                 document.getElementById('admin-nav').classList.remove('hidden');
@@ -211,86 +240,64 @@
 
         function logout() {
             localStorage.removeItem('user');
-            localStorage.removeItem('auth_token');
             window.location.href = '/logout';
         }
 
-        // Load dashboard data
         async function loadDashboard() {
-            if (!user) return;
-
             try {
-                // Fetch events
-                const eventsRes = await fetch('/api/events', {
+                const res = await fetch('/api/equipment?current_user=' + encodeURIComponent(user.displayName), {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
-                const eventsData = await eventsRes.json();
+                const data = await res.json();
                 
-                if (eventsData.success) {
-                    const myEvents = eventsData.events.filter(
-                        ev => ev.assigned_members && ev.assigned_members.includes(user.displayName)
-                    );
-
-                    document.getElementById('count-events').innerText = myEvents.length;
-                    const circle = document.getElementById('circle-events');
-                    const percent = Math.min(myEvents.length / 10, 1);
-                    circle.style.strokeDashoffset = 251.2 * (1 - percent);
-
-                    const dutiesList = document.getElementById('upcoming-duties');
-                    if (myEvents.length > 0) {
-                        dutiesList.innerHTML = '';
-                        myEvents.slice(0, 5).forEach(ev => {
-                            const item = document.createElement('div');
-                            item.className = 'glass-hover bg-white/5 p-4 rounded-2xl border border-white/5';
-                            item.innerHTML = `
-                                <div class="font-bold text-white mb-1">${ev.title}</div>
-                                <div class="flex items-center gap-3 text-xs text-slate-400">
-                                    <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${ev.date}</span>
-                                    <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${ev.venue}</span>
+                const list = document.getElementById('active-equipment-list');
+                if (data.success && data.equipment.length > 0) {
+                    list.innerHTML = '';
+                    data.equipment.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'glass p-4 border border-white/5 flex items-center justify-between group';
+                        div.innerHTML = `
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                                    <i data-lucide="camera" class="text-primary w-5 h-5"></i>
                                 </div>
-                            `;
-                            dutiesList.appendChild(item);
-                        });
-                        lucide.createIcons();
-                    }
+                                <div>
+                                    <h4 class="font-bold text-sm">${item.name}</h4>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">${item.category}</p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-mono font-bold px-2 py-1 bg-white/5 rounded-lg border border-white/10">${item.customId}</span>
+                        `;
+                        list.appendChild(div);
+                    });
+                    document.getElementById('count-items').innerText = data.equipment.length;
+                    document.getElementById('circle-items').style.strokeDashoffset = 251.2 - (251.2 * Math.min(data.equipment.length / 5, 1));
+                    lucide.createIcons();
                 }
 
-                // Fetch attendance/activity
-                const attRes = await fetch(`/api/attendance?email=${encodeURIComponent(user.email)}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-                    }
+                const evRes = await fetch('/api/events', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
-                const attData = await attRes.json();
-
-                if (attData.success) {
-                    const logs = attData.logs;
-                    const itemsHeld = logs.filter(l => l.type === 'check_in').length
-                                    - logs.filter(l => l.type === 'check_out').length;
-
-                    document.getElementById('count-items').innerText = Math.max(0, itemsHeld);
-                    const circle = document.getElementById('circle-items');
-                    const percent = Math.min(Math.max(0, itemsHeld) / 5, 1);
-                    circle.style.strokeDashoffset = 251.2 * (1 - percent);
-
-                    const activityList = document.getElementById('recent-activity');
-                    if (logs.length > 0) {
-                        activityList.innerHTML = '';
-                        logs.slice(0, 5).forEach(log => {
-                            const item = document.createElement('div');
-                            item.className = 'flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors';
-                            item.innerHTML = `
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-white">${log.event_title}</span>
-                                    <span class="text-[10px] text-slate-500">${new Date(log.timestamp).toLocaleDateString()}</span>
+                const evData = await evRes.json();
+                if (evData.success) {
+                    const myEvents = evData.events.filter(e => e.assigned_members && e.assigned_members.includes(user.displayName));
+                    document.getElementById('count-events').innerText = myEvents.length;
+                    document.getElementById('circle-events').style.strokeDashoffset = 251.2 - (251.2 * Math.min(myEvents.length / 10, 1));
+                    
+                    const duties = document.getElementById('upcoming-duties');
+                    if (myEvents.length > 0) {
+                        duties.innerHTML = '';
+                        myEvents.slice(0, 3).forEach(ev => {
+                            const div = document.createElement('div');
+                            div.className = 'glass p-4 border border-white/5';
+                            div.innerHTML = `
+                                <h4 class="font-bold text-sm mb-1">${ev.title}</h4>
+                                <div class="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                    <span>${ev.date}</span>
+                                    <span class="text-primary">${ev.venue}</span>
                                 </div>
-                                <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
-                                    log.type === 'check_in'
-                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                }">${log.type === 'check_in' ? 'In' : 'Out'}</span>
                             `;
-                            activityList.appendChild(item);
+                            duties.appendChild(div);
                         });
                     }
                 }
@@ -302,10 +309,9 @@
         async function changePassword() {
             const currentPass = document.getElementById('current-pass').value;
             const newPass = document.getElementById('new-pass').value;
-            const status = document.getElementById('password-status');
 
             if (!currentPass || !newPass) {
-                showStatus("Please fill all fields", "error");
+                showToast("Please fill all fields", "alert-circle", "error");
                 return;
             }
 
@@ -321,62 +327,67 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    showStatus("Password updated successfully!", "success");
+                    showToast("Password updated successfully!", "check-circle", "success");
                     document.getElementById('current-pass').value = '';
                     document.getElementById('new-pass').value = '';
                 } else {
-                    showStatus(data.message || "Failed to update password", "error");
+                    showToast(data.message || "Failed to update password", "x-circle", "error");
                 }
             } catch (err) {
-                showStatus("Connection error", "error");
+                showToast("Connection error", "wifi-off", "error");
             }
         }
 
-        function showStatus(msg, type) {
-            const status = document.getElementById('password-status');
-            status.innerText = msg;
-            status.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'bg-red-500/10', 'text-red-400');
+        function showToast(msg, icon, type) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMsg.innerText = msg;
+            toastIcon.setAttribute('data-lucide', icon);
+            lucide.createIcons();
+
+            toast.classList.remove('text-emerald-400', 'text-red-400', 'border-emerald-500/20', 'border-red-500/20');
             if (type === 'success') {
-                status.classList.add('bg-emerald-500/10', 'text-emerald-400');
+                toast.classList.add('text-emerald-400', 'border-emerald-500/20');
             } else {
-                status.classList.add('bg-red-500/10', 'text-red-400');
+                toast.classList.add('text-red-400', 'border-red-500/20');
             }
-            setTimeout(() => status.classList.add('hidden'), 5000);
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
 
         loadDashboard();
     </script>
 
-    <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-inner">
-        <a href="/home" class="mobile-nav-item active">
-            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
-            <span class="mnav-label">Home</span>
-        </a>
-        <a href="/team" class="mobile-nav-item">
-            <i data-lucide="users" class="mnav-icon"></i>
-            <span class="mnav-label">Team</span>
-        </a>
-        <a href="/calendar" class="mobile-nav-item">
-            <i data-lucide="calendar" class="mnav-icon"></i>
-            <span class="mnav-label">Events</span>
-        </a>
-        <a href="/attendance" class="mobile-nav-item">
-            <i data-lucide="clock" class="mnav-icon"></i>
-            <span class="mnav-label">Attend</span>
-        </a>
-        <a href="/inventory" class="mobile-nav-item">
-            <i data-lucide="package" class="mnav-icon"></i>
-            <span class="mnav-label">Inventory</span>
-        </a>
-        <a href="/dispatch" class="mobile-nav-item">
-            <i data-lucide="zap" class="mnav-icon"></i>
-            <span class="mnav-label">Dispatch</span>
-        </a>
+            <a href="/home" class="mobile-nav-item active">
+                <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+                <span class="mnav-label">Home</span>
+            </a>
+            <a href="/team" class="mobile-nav-item">
+                <i data-lucide="users" class="mnav-icon"></i>
+                <span class="mnav-label">Team</span>
+            </a>
+            <a href="/calendar" class="mobile-nav-item">
+                <i data-lucide="calendar" class="mnav-icon"></i>
+                <span class="mnav-label">Events</span>
+            </a>
+            <a href="/attendance" class="mobile-nav-item">
+                <i data-lucide="clock" class="mnav-icon"></i>
+                <span class="mnav-label">Attend</span>
+            </a>
+            <a href="/inventory" class="mobile-nav-item">
+                <i data-lucide="package" class="mnav-icon"></i>
+                <span class="mnav-label">Inventory</span>
+            </a>
+            <a href="/dispatch" class="mobile-nav-item">
+                <i data-lucide="zap" class="mnav-icon"></i>
+                <span class="mnav-label">Dispatch</span>
+            </a>
         </div>
     </nav>
 </body>
 </html>
-
-
