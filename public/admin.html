@@ -280,7 +280,14 @@
         function openScanner() {
             document.getElementById('scanner-modal').classList.remove('hidden');
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            const config = { 
+                fps: 25, 
+                qrbox: { width: 250, height: 250 },
+                videoConstraints: {
+                    facingMode: "environment",
+                    focusMode: "continuous"
+                }
+            };
             
             html5QrCode.start(
                 { facingMode: "environment" }, 

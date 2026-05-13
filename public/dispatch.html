@@ -361,7 +361,14 @@
             document.getElementById('scanner-placeholder').classList.add('hidden');
             
             html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 20, qrbox: { width: 280, height: 280 } };
+            const config = { 
+                fps: 25, 
+                qrbox: { width: 250, height: 250 },
+                videoConstraints: {
+                    facingMode: "environment",
+                    focusMode: "continuous"
+                }
+            };
             
             html5QrCode.start(
                 { facingMode: "environment" }, 
