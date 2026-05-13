@@ -189,14 +189,10 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
+                    <div class="grid grid-cols-2 gap-3">
                         <button id="start-btn" type="button" onclick="startScanner()" class="btn-primary py-4 flex items-center justify-center gap-2">
                             <i data-lucide="play" class="w-4 h-4"></i>
                             <span class="text-[10px] uppercase font-bold tracking-widest">Initialize</span>
-                        </button>
-                        <button id="capture-btn" type="button" onclick="captureFrame()" class="hidden glass border border-primary/40 text-primary hover:bg-primary/10 py-4 flex items-center justify-center gap-2 transition-all font-bold">
-                            <i data-lucide="camera" class="w-4 h-4"></i>
-                            <span class="text-[10px] uppercase font-bold tracking-widest">Capture</span>
                         </button>
                         <button id="stop-btn" type="button" onclick="stopScanner()" class="hidden glass border-white/10 hover:bg-red-500/10 hover:text-red-400 py-4 flex items-center justify-center gap-2 transition-all">
                             <i data-lucide="square" class="w-4 h-4"></i>
@@ -364,7 +360,6 @@
         function startScanner() {
             document.getElementById('start-btn').classList.add('hidden');
             document.getElementById('stop-btn').classList.remove('hidden');
-            document.getElementById('capture-btn').classList.remove('hidden');
             document.getElementById('scanner-placeholder').classList.add('hidden');
 
             html5QrCode = new Html5Qrcode("reader");
@@ -391,7 +386,6 @@
         }
 
         function stopScanner() {
-            document.getElementById('capture-btn').classList.add('hidden');
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => {
                     document.getElementById('start-btn').classList.remove('hidden');
@@ -403,27 +397,6 @@
                 document.getElementById('stop-btn').classList.add('hidden');
                 document.getElementById('scanner-placeholder').classList.remove('hidden');
             }
-        }
-
-        function captureFrame() {
-            const video = document.querySelector('#reader video');
-            if (!video) { showToast('Camera not active', 'camera-off', 'error'); return; }
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob(function(blob) {
-                const file = new File([blob], 'qr.png', { type: 'image/png' });
-                Html5Qrcode.scanFile(file, false)
-                    .then(result => {
-                        if (navigator.vibrate) navigator.vibrate(100);
-                        document.getElementById('equipment-id').value = result;
-                        stopScanner();
-                        showModal('Scan Successful', 'The QR code has been captured and validated correctly.', 'check-circle');
-                        document.getElementById('dispatch-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    })
-                    .catch(() => { showToast('No QR found \u2014 hold steady & try again', 'alert-circle', 'error'); });
-            }, 'image/png');
         }
 
         const canvas = document.getElementById('sig-canvas');
