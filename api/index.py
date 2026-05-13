@@ -522,6 +522,18 @@ def mark_attendance():
         is_active = last_log is not None and last_log.get('type') == 'check_in'
         active_event = last_log.get('event_title') if is_active else None
         if action_type == 'check_in':
+            # Check if user already checked out of THIS specific event
+            already_done = collection.find_one({
+                "email": email, 
+                "event_title": event_title, 
+                "type": "check_out"
+            })
+            if already_done:
+                return jsonify({
+                    "success": False, 
+                    "message": "You have already completed this event (checked out) and cannot check in again."
+                }), 409
+                
             if is_active:
                 if active_event == event_title:
                     return jsonify({"success": False, "message": "Already checked in to this event"}), 409
@@ -546,18 +558,32 @@ def mark_attendance():
 @token_required
 def get_attendance_status():
     target_email = request.args.get('email') or request.user.get('email')
+    event_title = request.args.get('event_title')
     collection = get_collection("attendance")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
     try:
+        # Check for active session
         logs = list(collection.find({"email": target_email}).sort("timestamp", -1).limit(1))
         last_log = logs[0] if logs else None
         is_checked_in = last_log is not None and last_log.get('type') == 'check_in'
         active_event = last_log.get('event_title') if is_checked_in else None
+        
+        # Check if a specific event is completed
+        is_completed = False
+        if event_title:
+            done_log = collection.find_one({
+                "email": target_email,
+                "event_title": event_title,
+                "type": "check_out"
+            })
+            is_completed = done_log is not None
+            
         return jsonify({
             "success": True,
             "is_checked_in": is_checked_in,
-            "active_event": active_event
+            "active_event": active_event,
+            "is_completed": is_completed
         }), 200
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
@@ -613,11 +639,26 @@ def dispatch_item():
         equip_coll = get_collection("equipment")
         if equip_coll is None:
             return jsonify({"success": False, "message": "Database connection error"}), 500
-        update_data = {"status": "checked_out" if action_type == 'checkout' else 'available'}
+            
+        # Check current item status
+        item = equip_coll.find_one({"customId": custom_id})
+        if not item:
+            return jsonify({"success": False, "message": "Item not found"}), 404
+            
+        current_status = item.get('status', 'available')
+        
         if action_type == 'checkout':
-            update_data["current_user"] = member
+            if current_status == 'checked_out':
+                return jsonify({
+                    "success": False, 
+                    "message": f"Item is already in use by {item.get('current_user', 'another member')}"
+                }), 409
+            update_data = {"status": "checked_out", "current_user": member}
         else:
-            update_data["current_user"] = None
+            if current_status == 'available':
+                return jsonify({"success": False, "message": "Item is already available"}), 409
+            update_data = {"status": "available", "current_user": None}
+            
         result = equip_coll.update_one({"customId": custom_id}, {"$set": update_data})
         if result.matched_count == 0:
             return jsonify({"success": False, "message": "Item not found"}), 404

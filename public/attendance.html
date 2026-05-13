@@ -290,7 +290,7 @@
 
             try {
                 const res = await fetch(
-                    `/api/attendance/status?email=${encodeURIComponent(user.email)}`,
+                    `/api/attendance/status?email=${encodeURIComponent(user.email)}&event_title=${encodeURIComponent(selectedEvent)}`,
                     { headers: authHeaders }
                 );
 
@@ -305,10 +305,15 @@
                     return;
                 }
 
-                const { is_checked_in, active_event } = data;
+                const { is_checked_in, active_event, is_completed } = data;
                 updateStatusCard(is_checked_in, active_event);
 
-                if (is_checked_in) {
+                if (is_completed) {
+                    // Mission already done
+                    checkInBtn.disabled = true;
+                    checkOutBtn.disabled = true;
+                    showMsg('Mission Completed ✓', 'success');
+                } else if (is_checked_in) {
                     if (active_event === selectedEvent) {
                         // Checked in HERE — only allow check-out
                         checkInBtn.disabled = true;

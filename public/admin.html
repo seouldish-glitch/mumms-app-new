@@ -15,8 +15,6 @@
     </style>
 </head>
 <body class="animate-fade">
-
-    <!-- Premium Navigation -->
     <nav class="nav-container">
         <div class="nav-bar">
             <div class="flex items-center gap-3">
@@ -539,255 +537,38 @@
     </script>
 
     <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+            <a href="/home" class="mobile-nav-item">
+                <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+                <span class="mnav-label">Home</span>
+            </a>
+            <a href="/team" class="mobile-nav-item">
+                <i data-lucide="users" class="mnav-icon"></i>
+                <span class="mnav-label">Team</span>
+            </a>
+            <a href="/calendar" class="mobile-nav-item">
+                <i data-lucide="calendar" class="mnav-icon"></i>
+                <span class="mnav-label">Events</span>
+            </a>
+            <a href="/attendance" class="mobile-nav-item">
+                <i data-lucide="clock" class="mnav-icon"></i>
+                <span class="mnav-label">Attend</span>
+            </a>
+            <a href="/inventory" class="mobile-nav-item">
+                <i data-lucide="package" class="mnav-icon"></i>
+                <span class="mnav-label">Inventory</span>
+            </a>
+            <a href="/dispatch" class="mobile-nav-item">
+                <i data-lucide="zap" class="mnav-icon"></i>
+                <span class="mnav-label">Dispatch</span>
+            </a>
+            <a href="/admin" id="mobile-admin-nav" class="mobile-nav-item active">
+                <i data-lucide="shield-check" class="mnav-icon"></i>
+                <span class="mnav-label">Admin</span>
+            </a>
         </div>
     </nav>
-    <script>
-        lucide.createIcons();
-        let html5QrCode = null;
-
-        function openScanner() {
-            document.getElementById('scanner-modal').classList.remove('hidden');
-            html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-            
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                (decodedText) => {
-                    document.getElementById('item-lookup-id').value = decodedText;
-                    closeScanner();
-                    trackItem();
-                },
-                (errorMessage) => { /* quiet errors */ }
-            ).catch(err => {
-                alert("Camera access denied or error.");
-                closeScanner();
-            });
-        }
-
-        function closeScanner() {
-            document.getElementById('scanner-modal').classList.add('hidden');
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode = null;
-                }).catch(err => console.error(err));
-            }
-        }
-
-        // Check login
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || (user.role !== 'MIC' && user.role !== 'President')) {
-            window.location.href = '/home';
-        } else {
-            document.getElementById('current-user-name').innerText = user.displayName || 'User';
-            document.getElementById('current-user-role').innerText = user.role || 'Member';
-            
-            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
-            document.getElementById('user-avatar').innerText = initials;
-            if (user.role === 'MIC' || user.role === 'President') {
-                document.getElementById('mobile-admin-nav').classList.remove('hidden');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = '/logout';
-        }
-
-        async function loadUsers() {
-            try {
-                const res = await fetch('/api/users', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-                });
-                const data = await res.json();
-                const select = document.getElementById('member-select');
-                if (data.success) {
-                    data.users.forEach(u => {
-                        const opt = document.createElement('option');
-                        opt.value = u.email;
-                        opt.innerText = u.displayName;
-                        select.appendChild(opt);
-                    });
-                }
-            } catch (err) {}
-        }
-
-        async function loadGlobalDispatch() {
-            try {
-                const res = await fetch('/api/dispatch', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-                });
-                const data = await res.json();
-                const list = document.getElementById('global-dispatch-list');
-                const activeList = document.getElementById('global-active-items');
-                list.innerHTML = '';
-                
-                if (data.success) {
-                    const recentLogs = data.logs.slice(-10).reverse();
-                    recentLogs.forEach(log => {
-                        const item = document.createElement('div');
-                        item.className = 'glass bg-white/2 p-4 border border-white/5 group hover:bg-primary/5 transition-all';
-                        item.innerHTML = `
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-xs font-bold text-white group-hover:text-primary transition-colors">${log.member}</span>
-                                <span class="text-[9px] font-mono font-bold text-slate-500">${new Date(log.timestamp).toLocaleTimeString()}</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">${log.customId}</span>
-                                <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${log.type === 'checkout' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}">${log.type}</span>
-                            </div>
-                        `;
-                        list.appendChild(item);
-                    });
-
-                    // Active Items Logic
-                    activeList.innerHTML = '';
-                    const itemsMap = {};
-                    data.logs.forEach(l => {
-                        if (l.type === 'checkout') itemsMap[l.customId] = l.member;
-                        else if (l.type === 'return') delete itemsMap[l.customId];
-                    });
-                    
-                    const activeIds = Object.keys(itemsMap);
-                    if (activeIds.length > 0) {
-                        activeIds.forEach(id => {
-                            const div = document.createElement('div');
-                            div.className = 'glass bg-white/2 p-3 flex justify-between items-center border border-white/5';
-                            div.innerHTML = `
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] font-bold text-white">${id}</span>
-                                    <span class="text-[8px] text-slate-500 uppercase tracking-widest">${itemsMap[id]}</span>
-                                </div>
-                                <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                            `;
-                            activeList.appendChild(div);
-                        });
-                    } else {
-                        activeList.innerHTML = '<div class="text-center py-10 text-slate-500 italic text-sm">No assets currently in use.</div>';
-                    }
-                }
-            } catch (err) {}
-        }
-
-        async function trackItem() {
-            const id = document.getElementById('item-lookup-id').value;
-            if (!id) return;
-
-            document.getElementById('item-lookup-placeholder').classList.add('hidden');
-            document.getElementById('item-tracker-data').classList.remove('hidden');
-
-            try {
-                const res = await fetch('/api/dispatch', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-                });
-                const data = await res.json();
-                const timeline = document.getElementById('item-timeline');
-                timeline.innerHTML = '';
-                
-                if (data.success) {
-                    const itemLogs = data.logs.filter(l => l.customId === id).reverse();
-                    document.getElementById('item-stat-uses').innerText = itemLogs.length;
-                    
-                    const latest = itemLogs[0];
-                    if (latest && latest.type === 'checkout') {
-                        document.getElementById('item-stat-user').innerText = latest.member;
-                        document.getElementById('item-stat-status').innerText = 'Deployed';
-                        document.getElementById('item-stat-status').className = 'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/20';
-                    } else {
-                        document.getElementById('item-stat-user').innerText = 'Base';
-                        document.getElementById('item-stat-status').innerText = 'Available';
-                        document.getElementById('item-stat-status').className = 'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-                    }
-
-                    itemLogs.forEach(log => {
-                        const div = document.createElement('div');
-                        div.className = 'glass bg-white/2 p-4 border border-white/5 flex justify-between items-center';
-                        div.innerHTML = `
-                            <div>
-                                <p class="text-xs font-bold text-white">${log.member}</p>
-                                <p class="text-[9px] text-slate-500">${new Date(log.timestamp).toLocaleString()}</p>
-                            </div>
-                            <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest ${log.type === 'checkout' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}">${log.type}</span>
-                        `;
-                        timeline.appendChild(div);
-                    });
-                }
-            } catch (err) {}
-        }
-
-        async function loadMemberData() {
-            const select = document.getElementById('member-select');
-            const email = select.value;
-            if (!email) {
-                document.getElementById('lookup-placeholder').classList.remove('hidden');
-                document.getElementById('member-data').classList.add('hidden');
-                return;
-            }
-
-            document.getElementById('lookup-placeholder').classList.add('hidden');
-            document.getElementById('member-data').classList.remove('hidden');
-
-            // Attendance
-            try {
-                const res = await fetch('/api/attendance', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-                });
-                const data = await res.json();
-                const list = document.getElementById('mbr-attendance-list');
-                list.innerHTML = '';
-                if (data.success) {
-                    const userLogs = data.logs.filter(l => l.email === email);
-                    document.getElementById('mbr-attendance-count').innerText = userLogs.length;
-                    
-                    userLogs.reverse().forEach(log => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td class="px-4 py-3 text-xs font-bold text-white">${log.event}</td>
-                            <td class="px-4 py-3 text-right">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary">Present</span>
-                            </td>
-                        `;
-                        list.appendChild(tr);
-                    });
-                }
-            } catch (err) {}
-
-            // Dispatch
-            try {
-                const res = await fetch('/api/dispatch', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
-                });
-                const data = await res.json();
-                const list = document.getElementById('mbr-dispatch-list');
-                list.innerHTML = '';
-                if (data.success) {
-                    const select = document.getElementById('member-select');
-                    const name = select.options[select.selectedIndex].text;
-                    const userLogs = data.logs.filter(l => l.member === name);
-                    
-                    const checkouts = userLogs.filter(l => l.type === 'checkout').length;
-                    const returns = userLogs.filter(l => l.type === 'return').length;
-                    document.getElementById('mbr-items-count').innerText = Math.max(0, checkouts - returns);
-
-                    userLogs.forEach(log => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td class="px-4 py-3 text-xs font-bold text-white">${log.customId}</td>
-                            <td class="px-4 py-3 text-right">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${log.type === 'checkout' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}">
-                                    ${log.type === 'checkout' ? 'Out' : 'In'}
-                                </span>
-                            </td>
-                        `;
-                        list.appendChild(tr);
-                    });
-                }
-            } catch (err) {}
-        }
-
-        loadUsers();
-        loadGlobalDispatch();
-    </script>
 </body>
 </html>
 
