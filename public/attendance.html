@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Attendance - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* ── Attendance page mobile polish ── */
+        @media (max-width: 768px) {
+            /* Deployment banner becomes a sticky strip below the page top */
+            #deployment-banner {
+                border-radius: 0.875rem !important;
+                padding: 0.75rem 1rem !important;
+                font-size: 0.75rem;
+                width: 100%;
+            }
+            /* Stack check-in/out buttons more prominently */
+            #check-in-btn, #check-out-btn {
+                padding-top: 1.25rem !important;
+                padding-bottom: 1.25rem !important;
+                font-size: 0.8125rem !important;
+            }
+            /* Status card compact */
+            #status-card { padding: 1rem !important; }
+        }
+    </style>
+</head>
+<body class="animate-fade">
+
+    <nav class="nav-container">
+        <div class="nav-bar">
+            <div class="flex items-center gap-3">
+                <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="/home" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/calendar" class="nav-link">Events</a>
+                <a href="/attendance" class="nav-link active">Attendance</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <a href="/dispatch" class="nav-link">Dispatch</a>
+                <a href="/admin" id="admin-nav" class="nav-link hidden">Admin</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 glass px-4 py-2 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-bold text-xs">
+                        <span id="user-avatar">U</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold" id="current-user-name">Loading...</span>
+                        <span class="text-[10px] text-primary font-medium" id="current-user-role">...</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container space-y-8">
+
+        <header class="flex flex-col gap-4">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-4xl font-bold text-white tracking-tight">Duty Attendance</h2>
+                    <p class="text-slate-400 max-w-md text-sm">Real-time participation tracking for media unit operations.</p>
+                </div>
+                <!-- Live Deployment Banner — updated dynamically -->
+                <div id="deployment-banner" class="hidden glass px-4 py-3 rounded-2xl border-l-4 border-l-orange-400 flex items-center gap-3">
+                    <div class="w-2 h-2 bg-orange-400 rounded-full animate-pulse flex-shrink-0"></div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Active Deployment</p>
+                        <p id="deployment-banner-event" class="text-xs font-bold text-orange-400 truncate"></p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left: Check-in/out Panel -->
+            <div class="lg:col-span-1 space-y-6">
+                <section class="glass p-8 space-y-6 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
+
+                    <div class="flex items-center gap-3 relative z-10">
+                        <i data-lucide="radio" class="text-primary w-5 h-5 animate-pulse"></i>
+                        <h3 class="text-xl font-bold">Field Deployment</h3>
+                    </div>
+
+                    <div class="space-y-5 relative z-10">
+                        <!-- Event Selector -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Mission Sector</label>
+                            <select id="event-select" class="input-field bg-white/5 border-white/10 appearance-none cursor-pointer">
+                                <option value="">Loading missions...</option>
+                            </select>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <button id="check-in-btn" disabled
+                                class="btn-primary py-6 flex flex-col items-center gap-2 group disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                                <i data-lucide="log-in" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-[10px] uppercase font-bold tracking-widest">Check-In</span>
+                            </button>
+                            <button id="check-out-btn" disabled
+                                class="glass border-white/10 hover:border-red-500/30 hover:bg-red-500/10 text-slate-400 hover:text-red-400 py-6 flex flex-col items-center gap-2 group transition-all disabled:opacity-30 disabled:cursor-not-allowed">
+                                <i data-lucide="log-out" class="w-5 h-5 group-hover:scale-110 transition-transform"></i>
+                                <span class="text-[10px] uppercase font-bold tracking-widest">Check-Out</span>
+                            </button>
+                        </div>
+
+                        <!-- Inline Status Message -->
+                        <div id="status-msg" class="hidden text-center py-2 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest"></div>
+                    </div>
+                </section>
+
+                <!-- Current Status Card — live -->
+                <section id="status-card" class="glass p-6 border-l-4 border-l-slate-700 flex items-center gap-4 transition-all">
+                    <div id="status-card-icon" class="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center">
+                        <i data-lucide="user" class="text-slate-500 w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Deployment Status</p>
+                        <h4 id="status-card-text" class="text-sm font-bold text-slate-400 uppercase tracking-tight">Standby</h4>
+                        <p id="status-card-event" class="text-[10px] text-slate-600 mt-0.5"></p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right: Log History -->
+            <div class="lg:col-span-2">
+                <section class="glass p-8 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="clipboard-list" class="text-primary w-5 h-5"></i>
+                            <h3 class="text-2xl font-bold text-white">Attendance Log</h3>
+                        </div>
+                        <span id="log-count" class="text-[10px] font-bold bg-white/5 border border-white/10 px-3 py-1 rounded-full text-slate-500 uppercase tracking-widest">
+                            — Entries
+                        </span>
+                    </div>
+
+                    <!-- Log skeleton / entries -->
+                    <div id="log-list" class="space-y-3">
+                        <div id="log-placeholder" class="text-center py-20 bg-white/5 rounded-3xl text-slate-500 italic text-sm">
+                            Loading attendance records...
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
+        <div class="glass max-w-md w-full p-8 text-center space-y-6">
+            <div id="modal-icon" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto"></div>
+            <div class="space-y-2">
+                <h3 id="modal-title" class="text-2xl font-bold text-white"></h3>
+                <p id="modal-msg" class="text-slate-400 text-sm leading-relaxed"></p>
+            </div>
+            <button id="modal-close" class="btn-primary w-full">Acknowledged</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ─── Auth ────────────────────────────────────────────────────────────
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) { window.location.href = '/login'; }
+
+        document.getElementById('current-user-name').innerText = user.displayName || 'User';
+        document.getElementById('current-user-role').innerText = user.role || 'Member';
+        const initials = (user.displayName || 'U').trim().split(' ').map(n => n[0]).join('').toUpperCase();
+        document.getElementById('user-avatar').innerText = initials;
+        if (user.role === 'MIC' || user.role === 'President') {
+            document.getElementById('admin-nav').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('auth_token');
+            window.location.href = '/logout';
+        }
+
+        // ─── Helpers ─────────────────────────────────────────────────────────
+        const authHeaders = {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        };
+
+        function showMsg(text, type = 'neutral') {
+            const el = document.getElementById('status-msg');
+            const classes = {
+                neutral: 'bg-white/5 text-slate-500',
+                success: 'bg-primary/10 text-primary',
+                error:   'bg-red-500/10 text-red-400',
+                warning: 'bg-orange-500/10 text-orange-400'
+            };
+            el.innerText = text;
+            el.className = `text-center py-2 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest ${classes[type]}`;
+            el.classList.remove('hidden');
+        }
+
+        function hideMsg() {
+            document.getElementById('status-msg').classList.add('hidden');
+        }
+
+        function showModal(title, msg, icon = 'info') {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('modal-icon').innerHTML =
+                `<i data-lucide="${icon}" class="text-primary w-8 h-8"></i>`;
+            lucide.createIcons();
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        document.getElementById('modal-close').onclick = () =>
+            document.getElementById('custom-modal').classList.add('hidden');
+
+        // ─── Status Card ──────────────────────────────────────────────────────
+        function updateStatusCard(isCheckedIn, activeEvent) {
+            const card     = document.getElementById('status-card');
+            const iconWrap = document.getElementById('status-card-icon');
+            const text     = document.getElementById('status-card-text');
+            const evText   = document.getElementById('status-card-event');
+            const banner   = document.getElementById('deployment-banner');
+            const bannerEv = document.getElementById('deployment-banner-event');
+
+            if (isCheckedIn && activeEvent) {
+                card.className = 'glass p-6 border-l-4 border-l-primary flex items-center gap-4 transition-all';
+                iconWrap.className = 'w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center';
+                iconWrap.innerHTML = '<i data-lucide="user-check" class="text-primary w-6 h-6"></i>';
+                text.className = 'text-sm font-bold text-primary uppercase tracking-tight';
+                text.innerText = 'Deployed';
+                evText.innerText = activeEvent;
+                banner.classList.remove('hidden');
+                bannerEv.innerText = activeEvent;
+            } else {
+                card.className = 'glass p-6 border-l-4 border-l-slate-700 flex items-center gap-4 transition-all';
+                iconWrap.className = 'w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center';
+                iconWrap.innerHTML = '<i data-lucide="user" class="text-slate-500 w-6 h-6"></i>';
+                text.className = 'text-sm font-bold text-slate-400 uppercase tracking-tight';
+                text.innerText = 'Standby';
+                evText.innerText = '';
+                banner.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        // ─── Button State (uses lightweight /status endpoint) ─────────────────
+        async function refreshButtonState(selectedEvent) {
+            const checkInBtn  = document.getElementById('check-in-btn');
+            const checkOutBtn = document.getElementById('check-out-btn');
+
+            // Always disable while we fetch
+            checkInBtn.disabled = true;
+            checkOutBtn.disabled = true;
+
+            if (!selectedEvent) {
+                hideMsg();
+                updateStatusCard(false, null);
+                return;
+            }
+
+            try {
+                const res = await fetch(
+                    `/api/attendance/status?email=${encodeURIComponent(user.email)}`,
+                    { headers: authHeaders }
+                );
+
+                if (res.status === 401) {
+                    showModal('Session Expired', 'Your credentials are invalid. Please log in again.', 'shield-alert');
+                    return;
+                }
+
+                const data = await res.json();
+                if (!data.success) {
+                    showMsg(data.message || 'Could not verify status', 'error');
+                    return;
+                }
+
+                const { is_checked_in, active_event } = data;
+                updateStatusCard(is_checked_in, active_event);
+
+                if (is_checked_in) {
+                    if (active_event === selectedEvent) {
+                        // Checked in HERE — only allow check-out
+                        checkInBtn.disabled = true;
+                        checkOutBtn.disabled = false;
+                        showMsg('Currently checked in here', 'success');
+                    } else {
+                        // Checked in ELSEWHERE — lock both
+                        checkInBtn.disabled = true;
+                        checkOutBtn.disabled = true;
+                        showMsg(`Active deployment: ${active_event}`, 'warning');
+                    }
+                } else {
+                    // Not checked in anywhere — allow check-in only
+                    checkInBtn.disabled = false;
+                    checkOutBtn.disabled = true;
+                    hideMsg();
+                }
+            } catch (err) {
+                console.error('Status fetch failed:', err);
+                showMsg('Connection error — try refreshing', 'error');
+            }
+        }
+
+        document.getElementById('event-select').addEventListener('change', e => {
+            refreshButtonState(e.target.value);
+        });
+
+        // ─── Load Events ──────────────────────────────────────────────────────
+        async function loadEvents() {
+            const select = document.getElementById('event-select');
+            try {
+                const res  = await fetch('/api/events', { headers: authHeaders });
+                const data = await res.json();
+
+                select.innerHTML = '<option value="">Select a mission...</option>';
+
+                if (data.success && data.events.length > 0) {
+                    const displayName = (user.displayName || '').trim();
+                    const isAdmin     = user.role === 'MIC' || user.role === 'President';
+                    let added = 0;
+
+                    data.events.forEach(ev => {
+                        const isAssigned = ev.assigned_members &&
+                            ev.assigned_members.some(m => m.trim().toLowerCase() === displayName.toLowerCase());
+
+                        if (isAssigned || isAdmin) {
+                            const opt = document.createElement('option');
+                            opt.value    = ev.title;
+                            opt.innerText = `${ev.title}${ev.date ? ' (' + ev.date + ')' : ''}`;
+                            select.appendChild(opt);
+                            added++;
+                        }
+                    });
+
+                    if (added === 0) {
+                        select.innerHTML = '<option value="" disabled>No missions assigned to you</option>';
+                    }
+                } else {
+                    select.innerHTML = '<option value="" disabled>No events found</option>';
+                }
+            } catch (err) {
+                console.error('Failed to load events:', err);
+                select.innerHTML = '<option value="" disabled>Failed to load events</option>';
+            }
+        }
+
+        // ─── Mark Attendance ──────────────────────────────────────────────────
+        async function markAttendance(type) {
+            const eventTitle  = document.getElementById('event-select').value;
+            const checkInBtn  = document.getElementById('check-in-btn');
+            const checkOutBtn = document.getElementById('check-out-btn');
+
+            if (!eventTitle) {
+                showModal('Select a Mission', 'Please choose an event before checking in or out.', 'alert-circle');
+                return;
+            }
+
+            // Lock UI immediately
+            checkInBtn.disabled  = true;
+            checkOutBtn.disabled = true;
+            showMsg('Transmitting…', 'neutral');
+
+            try {
+                const res = await fetch('/api/attendance', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({
+                        event_title: eventTitle,
+                        email: user.email,
+                        type: type
+                        // timestamp is now assigned server-side
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showMsg(type === 'check_in' ? 'Checked In ✓' : 'Checked Out ✓', 'success');
+                    // Refresh log and button state in parallel
+                    await Promise.all([loadLogs(), refreshButtonState(eventTitle)]);
+                } else {
+                    const errMsg = data.message || 'Action failed';
+                    showMsg(errMsg, 'error');
+                    showModal('Action Blocked', errMsg, 'alert-triangle');
+                    await refreshButtonState(eventTitle);
+                }
+            } catch (err) {
+                console.error('markAttendance error:', err);
+                showMsg('Network error — please retry', 'error');
+                await refreshButtonState(eventTitle);
+            }
+        }
+
+        document.getElementById('check-in-btn').onclick  = () => markAttendance('check_in');
+        document.getElementById('check-out-btn').onclick = () => markAttendance('check_out');
+
+        // ─── Load Logs ────────────────────────────────────────────────────────
+        async function loadLogs() {
+            const list  = document.getElementById('log-list');
+            const count = document.getElementById('log-count');
+
+            list.innerHTML = '<div id="log-placeholder" class="text-center py-16 bg-white/5 rounded-3xl text-slate-500 italic text-sm">Synchronizing records…</div>';
+
+            try {
+                const res = await fetch(
+                    `/api/attendance?email=${encodeURIComponent(user.email)}`,
+                    { headers: authHeaders }
+                );
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    list.innerHTML = `<div class="text-center py-16 bg-red-500/5 rounded-3xl text-red-400 italic text-sm">${err.message || 'Failed to load logs'}</div>`;
+                    count.innerText = '— Entries';
+                    return;
+                }
+
+                const data = await res.json();
+                list.innerHTML = '';
+
+                if (data.success && data.logs && data.logs.length > 0) {
+                    count.innerText = `${data.logs.length} ${data.logs.length === 1 ? 'Entry' : 'Entries'}`;
+
+                    data.logs.forEach(log => {
+                        const isCheckIn = log.type === 'check_in';
+                        let timeStr = '—';
+                        try {
+                            timeStr = new Date(log.timestamp).toLocaleString('en-IN', {
+                                dateStyle: 'medium', timeStyle: 'short'
+                            });
+                        } catch (_) {}
+
+                        const item = document.createElement('div');
+                        item.className = 'glass glass-hover p-4 flex justify-between items-center gap-4 group';
+                        item.innerHTML = `
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center
+                                    ${isCheckIn ? 'bg-primary/10' : 'bg-orange-500/10'}">
+                                    <i data-lucide="${isCheckIn ? 'log-in' : 'log-out'}"
+                                       class="w-4 h-4 ${isCheckIn ? 'text-primary' : 'text-orange-400'}"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-sm font-bold text-white truncate group-hover:text-primary transition-colors">
+                                        ${log.event_title || '—'}
+                                    </p>
+                                    <p class="text-[10px] text-slate-500 mt-0.5">${timeStr}</p>
+                                </div>
+                            </div>
+                            <span class="flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border
+                                ${isCheckIn
+                                    ? 'bg-primary/10 text-primary border-primary/20'
+                                    : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}">
+                                ${isCheckIn ? 'In' : 'Out'}
+                            </span>
+                        `;
+                        list.appendChild(item);
+                    });
+
+                    lucide.createIcons();
+                } else {
+                    count.innerText = '0 Entries';
+                    list.innerHTML = '<div class="text-center py-20 bg-white/5 rounded-3xl text-slate-500 italic text-sm">No attendance records yet.</div>';
+                }
+            } catch (err) {
+                console.error('loadLogs error:', err);
+                count.innerText = '— Entries';
+                list.innerHTML = '<div class="text-center py-16 bg-red-500/5 rounded-3xl text-red-400 italic text-sm">Failed to synchronize records.</div>';
+            }
+        }
+
+        // ─── Init ─────────────────────────────────────────────────────────────
+        (async () => {
+            await loadEvents();
+            // After events load, check global status to update status card & banner
+            // even before the user picks a dropdown item
+            try {
+                const res  = await fetch(
+                    `/api/attendance/status?email=${encodeURIComponent(user.email)}`,
+                    { headers: authHeaders }
+                );
+                const data = await res.json();
+                if (data.success) {
+                    updateStatusCard(data.is_checked_in, data.active_event);
+                    // If user is currently checked in, auto-select that event in dropdown
+                    if (data.is_checked_in && data.active_event) {
+                        const select = document.getElementById('event-select');
+                        const opt = Array.from(select.options).find(o => o.value === data.active_event);
+                        if (opt) {
+                            select.value = data.active_event;
+                            await refreshButtonState(data.active_event);
+                        }
+                    }
+                }
+            } catch (_) {}
+
+            await loadLogs();
+        })();
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-item">
+            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+            <span class="mnav-label">Home</span>
+        </a>
+        <a href="/team" class="mobile-nav-item">
+            <i data-lucide="users" class="mnav-icon"></i>
+            <span class="mnav-label">Team</span>
+        </a>
+        <a href="/calendar" class="mobile-nav-item">
+            <i data-lucide="calendar" class="mnav-icon"></i>
+            <span class="mnav-label">Events</span>
+        </a>
+        <a href="/attendance" class="mobile-nav-item active">
+            <i data-lucide="clock" class="mnav-icon"></i>
+            <span class="mnav-label">Attend</span>
+        </a>
+        <a href="/inventory" class="mobile-nav-item">
+            <i data-lucide="package" class="mnav-icon"></i>
+            <span class="mnav-label">Inventory</span>
+        </a>
+        <a href="/dispatch" class="mobile-nav-item">
+            <i data-lucide="zap" class="mnav-icon"></i>
+            <span class="mnav-label">Dispatch</span>
+        </a>
+        </div>
+    </nav>
+</body>
+</html>

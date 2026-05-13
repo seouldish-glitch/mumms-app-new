@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Team - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="animate-fade">
+
+    <!-- Premium Navigation -->
+    <nav class="nav-container">
+        <div class="nav-bar">
+            <div class="flex items-center gap-3">
+                <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="/home" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link active">Team</a>
+                <a href="/calendar" class="nav-link">Events</a>
+                <a href="/attendance" class="nav-link">Attendance</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <a href="/dispatch" class="nav-link">Dispatch</a>
+                <a href="/admin" id="admin-nav" class="nav-link hidden">Admin</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 glass px-4 py-2 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-bold text-xs">
+                        <span id="user-avatar">U</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold" id="current-user-name">Loading...</span>
+                        <span class="text-[10px] text-primary font-medium" id="current-user-role">...</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container space-y-8">
+        
+        <!-- Page Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-2">
+                <h2 class="text-4xl font-bold text-white tracking-tight">Our Team</h2>
+                <p class="text-slate-400 max-w-md">Meet the dedicated members of St. Benedict's College Media Unit.</p>
+            </div>
+            <div class="glass px-6 py-3 flex items-center gap-4">
+                <div class="flex flex-col items-end">
+                    <span class="text-xs text-slate-500 font-bold uppercase tracking-widest">Active Force</span>
+                    <span class="text-xl font-bold text-primary" id="user-count">0 Members</span>
+                </div>
+                <div class="w-px h-10 bg-white/10"></div>
+                <i data-lucide="shield" class="text-primary w-6 h-6"></i>
+            </div>
+        </header>
+
+        <!-- Admin: Register Panel -->
+        <section id="register-panel" class="hidden glass p-8 space-y-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16"></div>
+            <div class="flex items-center gap-3 mb-2 relative z-10">
+                <i data-lucide="user-plus" class="text-primary w-5 h-5"></i>
+                <h3 class="text-xl font-bold">Onboard New Member</h3>
+            </div>
+            <form id="registerForm" class="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Full Name</label>
+                    <input type="text" id="reg-name" required placeholder="e.g. John Doe" class="input-field bg-white/5 border-white/10">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Email Address</label>
+                    <input type="email" id="reg-email" required placeholder="john@media.com" class="input-field bg-white/5 border-white/10">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Access Role</label>
+                    <select id="reg-role" class="input-field bg-white/5 border-white/10 appearance-none">
+                        <option value="Member">Member</option>
+                        <option value="Photographer">Photographer</option>
+                        <option value="Videographer">Videographer</option>
+                        <option value="Editor">Editor</option>
+                        <option value="MIC">MIC</option>
+                        <option value="President">President</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Initial Password</label>
+                    <input type="password" id="reg-pass" required placeholder="••••••••" class="input-field bg-white/5 border-white/10">
+                </div>
+                <div class="md:col-span-4 flex justify-end">
+                    <button type="submit" class="btn-primary px-8">Add Member</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Team Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="team-grid">
+            <!-- Skeletons -->
+            <div class="glass h-40 animate-pulse bg-white/5"></div>
+            <div class="glass h-40 animate-pulse bg-white/5"></div>
+            <div class="glass h-40 animate-pulse bg-white/5"></div>
+        </section>
+    </main>
+
+    <!-- UI Notification Modal -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-bg-dark/80 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
+        <div class="glass max-w-md w-full p-8 text-center space-y-6">
+            <div id="modal-icon" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto">
+                <i data-lucide="info" class="text-primary w-8 h-8"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 id="modal-title" class="text-2xl font-bold text-white">Notification</h3>
+                <p id="modal-msg" class="text-slate-400"></p>
+            </div>
+            <button id="modal-close" class="btn-primary w-full">Dismiss</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+
+            if (user.role === 'MIC' || user.role === 'President') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+                document.getElementById('register-panel').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('auth_token');
+            window.location.href = '/logout';
+        }
+
+        // Fetch team
+        async function loadTeam() {
+            try {
+                const response = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await response.json();
+                const grid = document.getElementById('team-grid');
+                grid.innerHTML = '';
+                
+                if (data.success && data.users.length > 0) {
+                    document.getElementById('user-count').innerText = `${data.users.length} Members`;
+                    
+                    const roleOrder = { "President": 1, "Vice President": 2, "MIC": 3 };
+                    data.users.sort((a, b) => {
+                        const orderA = roleOrder[a.role] || 4;
+                        const orderB = roleOrder[b.role] || 4;
+                        return orderA - orderB;
+                    });
+
+                    data.users.forEach(u => {
+                        const card = document.createElement('div');
+                        card.className = 'glass glass-hover p-6 flex flex-col justify-between group';
+                        
+                        const initials = u.displayName ? u.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+                        const isSelf = u.email === user.email;
+                        const canAdmin = user && (user.role === 'MIC' || user.role === 'President');
+
+                        card.innerHTML = `
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="w-14 h-14 bg-white/5 text-primary rounded-2xl flex items-center justify-center font-bold text-xl border border-white/10 group-hover:border-primary/30 transition-all">
+                                    ${initials}
+                                </div>
+                                <div class="flex flex-col items-end">
+                                    <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20">${u.role || 'Member'}</span>
+                                    ${isSelf ? '<span class="text-[10px] text-slate-500 mt-1 italic font-medium">You</span>' : ''}
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <h4 class="text-lg font-bold text-white group-hover:text-primary transition-colors">${u.displayName || 'Anonymous'}</h4>
+                                <p class="text-xs text-slate-500 font-medium truncate">${u.email || ''}</p>
+                            </div>
+                            ${canAdmin && !isSelf ? `
+                                <div class="flex gap-2 mt-6 pt-6 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="editRole('${u.email}')" class="flex-1 text-[10px] uppercase font-bold tracking-widest bg-white/5 hover:bg-white/10 py-2 rounded-lg transition-colors border border-white/10">Role</button>
+                                    <button onclick="deleteUser('${u.email}')" class="flex-1 text-[10px] uppercase font-bold tracking-widest bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2 rounded-lg transition-colors border border-red-500/20">Remove</button>
+                                </div>
+                            ` : ''}
+                        `;
+                        grid.appendChild(card);
+                    });
+                } else {
+                    grid.innerHTML = '<div class="text-slate-500 col-span-full text-center py-20 bg-white/5 rounded-3xl">No force found in the database.</div>';
+                }
+            } catch (err) {
+                console.error("Error fetching team:", err);
+            }
+        }
+
+        // Form submission
+        if (document.getElementById('registerForm')) {
+            document.getElementById('registerForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button');
+                btn.disabled = true;
+                btn.innerText = "Processing...";
+                
+                try {
+                    const res = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                        },
+                        body: JSON.stringify({
+                            displayName: document.getElementById('reg-name').value,
+                            email: document.getElementById('reg-email').value,
+                            password: document.getElementById('reg-pass').value,
+                            role: document.getElementById('reg-role').value,
+                            admin_role: user.role
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        showModal("Success", "New member has been onboarded successfully.", "check-circle");
+                        this.reset();
+                        loadTeam();
+                    } else {
+                        showModal("Access Denied", data.message || "Failed to onboard member.", "alert-circle");
+                    }
+                } catch (err) {
+                    showModal("Network Error", "Could not connect to the command server.", "wifi-off");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "Add Member";
+                }
+            });
+        }
+
+        async function deleteUser(email) {
+            if (confirm(`Deactivate access for ${email}?`)) {
+                const res = await fetch(`/api/users/${email}?user_role=${user.role}`, { 
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await res.json();
+                if (data.success) loadTeam();
+                else alert(data.message);
+            }
+        }
+
+        async function editRole(email) {
+            const newRole = prompt("Enter new clearance (Member, Photographer, Videographer, Editor, MIC, President):");
+            if (newRole) {
+                const res = await fetch(`/api/users/${email}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({ role: newRole, admin_role: user.role })
+                });
+                const data = await res.json();
+                if (data.success) loadTeam();
+                else alert(data.message);
+            }
+        }
+
+        function showModal(title, msg, icon = "info") {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            const iconContainer = document.getElementById('modal-icon');
+            iconContainer.innerHTML = `<i data-lucide="${icon}" class="text-primary w-8 h-8"></i>`;
+            lucide.createIcons();
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+        });
+
+        loadTeam();
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-item">
+            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+            <span class="mnav-label">Home</span>
+        </a>
+        <a href="/team" class="mobile-nav-item active">
+            <i data-lucide="users" class="mnav-icon"></i>
+            <span class="mnav-label">Team</span>
+        </a>
+        <a href="/calendar" class="mobile-nav-item">
+            <i data-lucide="calendar" class="mnav-icon"></i>
+            <span class="mnav-label">Events</span>
+        </a>
+        <a href="/attendance" class="mobile-nav-item">
+            <i data-lucide="clock" class="mnav-icon"></i>
+            <span class="mnav-label">Attend</span>
+        </a>
+        <a href="/inventory" class="mobile-nav-item">
+            <i data-lucide="package" class="mnav-icon"></i>
+            <span class="mnav-label">Inventory</span>
+        </a>
+        <a href="/dispatch" class="mobile-nav-item">
+            <i data-lucide="zap" class="mnav-icon"></i>
+            <span class="mnav-label">Dispatch</span>
+        </a>
+        </div>
+    </nav>
+</body>
+</html>
+

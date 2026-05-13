@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="animate-fade">
+
+    <!-- Premium Navigation -->
+    <nav class="nav-container">
+        <div class="nav-bar">
+            <div class="flex items-center gap-3">
+                <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="/home" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/calendar" class="nav-link">Events</a>
+                <a href="/attendance" class="nav-link">Attendance</a>
+                <a href="/inventory" class="nav-link active">Inventory</a>
+                <a href="/dispatch" class="nav-link">Dispatch</a>
+                <a href="/admin" id="admin-nav" class="nav-link hidden">Admin</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 glass px-4 py-2 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-bold text-xs">
+                        <span id="user-avatar">U</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold" id="current-user-name">Loading...</span>
+                        <span class="text-[10px] text-primary font-medium" id="current-user-role">...</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container space-y-8">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-2">
+                <h2 class="text-4xl font-bold text-white tracking-tight">Equipment Inventory</h2>
+                <p class="text-slate-400 max-w-md">Comprehensive asset management and technical equipment tracking system.</p>
+            </div>
+            <div class="flex gap-2">
+                <a href="/print" id="print-btn" class="hidden btn-primary px-6 py-3 flex items-center gap-2">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    <span class="text-xs uppercase tracking-widest font-bold">Print All QRs</span>
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Left: Stat Overviews -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="glass p-6 space-y-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <i data-lucide="bar-chart-3" class="text-primary w-4 h-4"></i>
+                        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Asset Analytics</h3>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="glass bg-white/5 p-4 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Total Assets</p>
+                                <h4 class="text-2xl font-bold text-white" id="total-assets">0</h4>
+                            </div>
+                            <i data-lucide="database" class="text-primary/40 w-8 h-8"></i>
+                        </div>
+                        <div class="glass bg-white/5 p-4 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Active Categories</p>
+                                <h4 class="text-2xl font-bold text-white" id="total-categories">0</h4>
+                            </div>
+                            <i data-lucide="layers" class="text-primary/40 w-8 h-8"></i>
+                        </div>
+                        <div class="glass bg-white/5 p-4 flex justify-between items-center">
+                            <div>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">In Stock</p>
+                                <h4 class="text-2xl font-bold text-emerald-400" id="total-available">0</h4>
+                            </div>
+                            <i data-lucide="check-circle" class="text-emerald-500/40 w-8 h-8"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Action Card -->
+                <div id="admin-actions" class="hidden glass p-6 border-l-4 border-l-primary space-y-4">
+                    <h4 class="text-sm font-bold text-white uppercase tracking-tight">Technical Control</h4>
+                    <p class="text-[10px] text-slate-500">Authorized personnel can generate equipment identity markers.</p>
+                    <button onclick="window.location.href='/admin'" class="w-full btn-primary py-3 text-[10px] uppercase tracking-widest">Inventory Management</button>
+                </div>
+            </div>
+
+            <!-- Right: Equipment Table -->
+            <div class="lg:col-span-3">
+                <section class="glass overflow-hidden">
+                    <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="list" class="text-primary w-5 h-5"></i>
+                            <h3 class="text-xl font-bold text-white">Asset Manifest</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="search-inventory" placeholder="Search ID or Name..." class="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-xs text-white focus:outline-none focus:border-primary/50 transition-all w-48">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-white/2">
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Asset Name & ID</th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Classification</th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Operations</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-list" class="divide-y divide-white/5">
+                                <!-- Loading State -->
+                                <tr>
+                                    <td colspan="4" class="px-6 py-20 text-center">
+                                        <div class="flex flex-col items-center gap-3">
+                                            <div class="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                                            <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Syncing with Central Database...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Hidden QR Generation Area -->
+    <div id="qr-hidden" class="hidden"></div>
+
+    <!-- Modal System -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-bg-dark/80 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
+        <div class="glass max-w-md w-full p-8 text-center space-y-6">
+            <div id="modal-icon" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto">
+                <i data-lucide="info" class="text-primary w-8 h-8"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 id="modal-title" class="text-2xl font-bold text-white">System Protocol</h3>
+                <p id="modal-msg" class="text-slate-400"></p>
+            </div>
+            <button id="modal-close" class="btn-primary w-full">Confirmed</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+
+            if (user.role === 'MIC' || user.role === 'President') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+                document.getElementById('print-btn').classList.remove('hidden');
+                document.getElementById('admin-actions').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/logout';
+        }
+
+        // Equipment Data
+        let equipmentData = [];
+
+        async function loadEquipment() {
+            try {
+                const res = await fetch('/api/equipment', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    equipmentData = data.equipment;
+                    renderEquipment(equipmentData);
+                    
+                    document.getElementById('total-assets').innerText = equipmentData.length;
+                    document.getElementById('total-categories').innerText = new Set(equipmentData.map(i => i.category)).size;
+                    document.getElementById('total-available').innerText = equipmentData.filter(i => i.status === 'available').length;
+                }
+            } catch (err) {
+                console.error("Error loading inventory:", err);
+            }
+        }
+
+        function renderEquipment(items) {
+            const list = document.getElementById('inventory-list');
+            list.innerHTML = '';
+            
+            if (items.length > 0) {
+                items.forEach(item => {
+                    const isAdmin = user && (user.role === 'MIC' || user.role === 'President');
+                    const isAvailable = item.status === 'available';
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-white/2 transition-colors group';
+                    
+                    tr.innerHTML = `
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-white group-hover:text-primary transition-colors">${item.name}</span>
+                                <span class="text-[10px] text-slate-500 font-medium uppercase tracking-widest">${item.customId}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 text-slate-400">
+                                ${item.category}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-center">
+                            <div class="flex justify-center">
+                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${isAvailable ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}">
+                                    ${item.status}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            ${isAdmin ? `
+                                <button onclick="downloadQR('${item.customId}', '${item.name}')" class="p-2 glass hover:bg-primary/10 text-slate-400 hover:text-primary transition-all">
+                                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                                </button>
+                            ` : `<span class="text-[10px] text-slate-600 font-bold uppercase italic">Restricted</span>`}
+                        </td>
+                    `;
+                    list.appendChild(tr);
+                });
+                lucide.createIcons();
+            } else {
+                list.innerHTML = '<tr><td colspan="4" class="px-6 py-20 text-center text-slate-500 italic">No assets found in the current sector.</td></tr>';
+            }
+        }
+
+        // Search Filter
+        document.getElementById('search-inventory').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = equipmentData.filter(item => 
+                item.name.toLowerCase().includes(query) || 
+                item.customId.toLowerCase().includes(query) ||
+                item.category.toLowerCase().includes(query)
+            );
+            renderEquipment(filtered);
+        });
+
+        // QR Download Logic
+        function downloadQR(id, name) {
+            const qrContainer = document.getElementById('qr-hidden');
+            qrContainer.innerHTML = '';
+            
+            new QRCode(qrContainer, {
+                text: id,
+                width: 500,
+                height: 500,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            setTimeout(() => {
+                const img = qrContainer.querySelector('img');
+                if (img) {
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.download = `ASSET_${id}_${name.replace(/\s+/g, '_')}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showModal("Identity Marker Exported", `QR identity for ${name} has been generated and saved.`, "check-circle");
+                }
+            }, 200);
+        }
+
+        function showModal(title, msg, icon = "info") {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('modal-icon').innerHTML = `<i data-lucide="${icon}" class="text-primary w-8 h-8"></i>`;
+            lucide.createIcons();
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        document.getElementById('modal-close').onclick = () => document.getElementById('custom-modal').classList.add('hidden');
+
+        loadEquipment();
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-item">
+            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+            <span class="mnav-label">Home</span>
+        </a>
+        <a href="/team" class="mobile-nav-item">
+            <i data-lucide="users" class="mnav-icon"></i>
+            <span class="mnav-label">Team</span>
+        </a>
+        <a href="/calendar" class="mobile-nav-item">
+            <i data-lucide="calendar" class="mnav-icon"></i>
+            <span class="mnav-label">Events</span>
+        </a>
+        <a href="/attendance" class="mobile-nav-item">
+            <i data-lucide="clock" class="mnav-icon"></i>
+            <span class="mnav-label">Attend</span>
+        </a>
+        <a href="/inventory" class="mobile-nav-item active">
+            <i data-lucide="package" class="mnav-icon"></i>
+            <span class="mnav-label">Inventory</span>
+        </a>
+        <a href="/dispatch" class="mobile-nav-item">
+            <i data-lucide="zap" class="mnav-icon"></i>
+            <span class="mnav-label">Dispatch</span>
+        </a>
+        </div>
+    </nav>
+</body>
+</html>
+

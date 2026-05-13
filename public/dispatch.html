@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        #reader__scan_region { background: transparent !important; }
+        #reader__dashboard { display: none !important; }
+        video { border-radius: 1.5rem; }
+    </style>
+</head>
+<body class="animate-fade">
+
+    <!-- Premium Navigation -->
+    <nav class="nav-container">
+        <div class="nav-bar">
+            <div class="flex items-center gap-3">
+                <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="/home" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/calendar" class="nav-link">Events</a>
+                <a href="/attendance" class="nav-link">Attendance</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <a href="/dispatch" class="nav-link active">Dispatch</a>
+                <a href="/admin" id="admin-nav" class="nav-link hidden">Admin</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 glass px-4 py-2 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-bold text-xs">
+                        <span id="user-avatar">U</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold" id="current-user-name">Loading...</span>
+                        <span class="text-[10px] text-primary font-medium" id="current-user-role">...</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container space-y-8">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-2">
+                <h2 class="text-4xl font-bold text-white tracking-tight">Security Dispatch</h2>
+                <p class="text-slate-400 max-w-md">Authorized equipment mobilization and return protocol for field operations.</p>
+            </div>
+            <div id="status-indicator" class="flex items-center gap-3 glass px-5 py-3 rounded-2xl border-l-4 border-l-primary">
+                <div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <span class="text-[10px] font-bold text-white uppercase tracking-widest">Protocol Active</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left: Scanner Interface -->
+            <div class="space-y-6">
+                <section class="glass p-8 space-y-6 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-primary/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                    
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="scan" class="text-primary w-5 h-5"></i>
+                            <h3 class="text-xl font-bold">Identity Scanner</h3>
+                        </div>
+                        <button id="camera-toggle" class="p-2 glass hover:bg-primary/10 text-slate-400 hover:text-primary transition-all">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="relative bg-black/40 rounded-3xl overflow-hidden aspect-square border border-white/5 shadow-2xl">
+                        <div id="reader" class="w-full h-full"></div>
+                        
+                        <!-- HUD Elements -->
+                        <div class="absolute inset-8 border border-primary/20 rounded-2xl pointer-events-none">
+                            <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary"></div>
+                            <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary"></div>
+                            <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary"></div>
+                            <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary"></div>
+                        </div>
+                        
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" id="scanner-placeholder">
+                            <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 mb-4">
+                                <i data-lucide="qr-code" class="text-primary w-10 h-10 animate-pulse"></i>
+                            </div>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Awaiting Signal</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <button id="start-btn" onclick="startScanner()" class="btn-primary py-4 flex items-center justify-center gap-2">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                            <span class="text-[10px] uppercase font-bold tracking-widest">Initialize</span>
+                        </button>
+                        <button id="stop-btn" onclick="stopScanner()" class="hidden glass border-white/10 hover:bg-red-500/10 hover:text-red-400 py-4 flex items-center justify-center gap-2 transition-all">
+                            <i data-lucide="square" class="w-4 h-4"></i>
+                            <span class="text-[10px] uppercase font-bold tracking-widest">Terminate</span>
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right: Protocol Form -->
+            <div class="space-y-6">
+                <section class="glass p-8 space-y-8">
+                    <!-- Workflow Selector -->
+                    <div class="flex p-1 bg-white/5 rounded-2xl border border-white/10">
+                        <button id="tab-checkout" onclick="setMode('checkout')" class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all bg-primary text-black">
+                            Mobilization
+                        </button>
+                        <button id="tab-return" onclick="setMode('return')" class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all text-slate-500 hover:text-white">
+                            Return Sync
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Asset Reference</label>
+                            <div class="relative">
+                                <i data-lucide="tag" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                                <input type="text" id="equipment-id" class="input-field pl-12" placeholder="Scan marker or enter manually">
+                            </div>
+                        </div>
+
+                        <!-- Active Assets List (Visible in Return mode) -->
+                        <div id="checked-out-list-container" class="hidden space-y-3 animate-fade">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Your Active Deployments</label>
+                            <div id="checked-out-list" class="glass bg-white/2 p-4 max-h-48 overflow-y-auto space-y-2 border-white/5 scrollbar-thin">
+                                <div class="text-center py-4 text-[10px] text-slate-500 font-bold uppercase italic">Querying Operations...</div>
+                            </div>
+                        </div>
+
+                        <div id="purpose-container" class="space-y-2 animate-fade">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Sector Objective</label>
+                            <div class="relative">
+                                <i data-lucide="target" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500"></i>
+                                <select id="purpose" class="input-field pl-12 appearance-none">
+                                    <option value="">Select mission objective...</option>
+                                    <optgroup label="Live Operations" id="upcoming-duties-group"></optgroup>
+                                    <optgroup label="System Maintenance">
+                                        <option value="Maintenance">Calibration/Repair</option>
+                                        <option value="Test / Practice">Operational Testing</option>
+                                        <option value="Other">External Assignment</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center px-1">
+                                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500">Identity Verification</label>
+                                <button onclick="clearSignature()" class="text-[10px] text-primary hover:text-white uppercase font-bold transition-colors">Reset</button>
+                            </div>
+                            <div class="relative glass bg-black/40 rounded-2xl h-32 border-white/5 group overflow-hidden">
+                                <canvas id="sig-canvas" class="w-full h-full cursor-crosshair relative z-10"></canvas>
+                                <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                                    <p class="text-[10px] uppercase font-bold tracking-[0.3em] text-white">Digital Signature Field</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="action-btn" onclick="authorizeDispatch()" class="btn-primary w-full py-5 text-[10px] uppercase font-bold tracking-[0.2em] shadow-primary/20">
+                            Authorize Mobilization
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Global Loading System -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-bg-dark/80 backdrop-blur-md flex flex-col items-center justify-center z-[10000]">
+        <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-6"></div>
+        <p id="loading-text" class="text-[10px] font-bold text-white uppercase tracking-[0.3em] animate-pulse">Syncing Protocols</p>
+    </div>
+
+    <!-- Modal System -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-bg-dark/90 backdrop-blur-xl flex items-center justify-center z-[10000] p-4">
+        <div class="glass max-w-md w-full p-10 text-center space-y-8 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent"></div>
+            <div id="modal-icon" class="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center border border-primary/20 mx-auto">
+                <i data-lucide="shield-check" class="text-primary w-10 h-10"></i>
+            </div>
+            <div class="space-y-3">
+                <h3 id="modal-title" class="text-3xl font-bold text-white tracking-tight">Signal Received</h3>
+                <p id="modal-msg" class="text-slate-400 text-sm leading-relaxed"></p>
+            </div>
+            <button id="modal-close" class="btn-primary w-full py-4 text-[10px] uppercase font-bold tracking-widest">Acknowledge</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+
+            if (user.role === 'MIC' || user.role === 'President') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('auth_token');
+            window.location.href = '/logout';
+        }
+
+        let mode = 'checkout';
+        let html5QrCode;
+
+        function setMode(newMode) {
+            mode = newMode;
+            const isCheckout = mode === 'checkout';
+            
+            // UI Updates
+            const btn1 = document.getElementById('tab-checkout');
+            const btn2 = document.getElementById('tab-return');
+            const actionBtn = document.getElementById('action-btn');
+            
+            if (isCheckout) {
+                btn1.className = "flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all bg-primary text-black";
+                btn2.className = "flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all text-slate-500 hover:text-white";
+                actionBtn.innerText = "Authorize Mobilization";
+                actionBtn.classList.remove('bg-blue-500', 'text-white');
+                actionBtn.classList.add('bg-primary', 'text-black');
+            } else {
+                btn2.className = "flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all bg-primary text-black";
+                btn1.className = "flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all text-slate-500 hover:text-white";
+                actionBtn.innerText = "Execute Return Protocol";
+                actionBtn.classList.add('bg-primary', 'text-black');
+            }
+            
+            document.getElementById('checked-out-list-container').classList.toggle('hidden', isCheckout);
+            document.getElementById('purpose-container').classList.toggle('hidden', !isCheckout);
+            if (!isCheckout) loadUserEquipment();
+        }
+
+        // Scanner Logic
+        function startScanner() {
+            document.getElementById('start-btn').classList.add('hidden');
+            document.getElementById('stop-btn').classList.remove('hidden');
+            document.getElementById('scanner-placeholder').classList.add('hidden');
+            
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 20, qrbox: { width: 280, height: 280 } };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                (text) => {
+                    document.getElementById('equipment-id').value = text;
+                    stopScanner();
+                    showModal("Marker Detected", `Asset ID: ${text} identified. Protocol ready.`, "shield-check");
+                },
+                (err) => {}
+            ).catch(() => {
+                showModal("Access Denied", "Camera hardware communication failure.", "alert-triangle");
+                stopScanner();
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    document.getElementById('start-btn').classList.remove('hidden');
+                    document.getElementById('stop-btn').classList.add('hidden');
+                    document.getElementById('scanner-placeholder').classList.remove('hidden');
+                });
+            } else {
+                document.getElementById('start-btn').classList.remove('hidden');
+                document.getElementById('stop-btn').classList.add('hidden');
+                document.getElementById('scanner-placeholder').classList.remove('hidden');
+            }
+        }
+
+        // Signature System
+        const canvas = document.getElementById('sig-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        const startDraw = (e) => { drawing = true; draw(e); };
+        const endDraw = () => { drawing = false; ctx.beginPath(); };
+        const draw = (e) => {
+            if (!drawing) return;
+            const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            const rect = canvas.getBoundingClientRect();
+            
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#00DF82';
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = '#00DF82';
+
+            ctx.lineTo(clientX - rect.left, clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(clientX - rect.left, clientY - rect.top);
+        };
+
+        canvas.onmousedown = startDraw;
+        canvas.onmouseup = endDraw;
+        canvas.onmousemove = draw;
+        canvas.ontouchstart = (e) => { startDraw(e.touches[0]); e.preventDefault(); };
+        canvas.ontouchend = endDraw;
+        canvas.ontouchmove = (e) => { draw(e.touches[0]); e.preventDefault(); };
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Protocol Execution
+        async function authorizeDispatch() {
+            const id = document.getElementById('equipment-id').value;
+            const purpose = document.getElementById('purpose').value;
+            const isCheckout = mode === 'checkout';
+            
+            if (!id || (isCheckout && !purpose)) {
+                showModal("Verification Failure", `Complete all required ${isCheckout ? 'identity and objective' : 'identity'} fields.`, "alert-octagon");
+                return;
+            }
+            
+            toggleLoading(true, "Transmitting Protocol...");
+            
+            try {
+                const res = await fetch('/api/dispatch', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({
+                        customId: id,
+                        type: mode,
+                        member: user.displayName,
+                        purpose,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showModal("Protocol Authorized", `Equipment ${mode === 'checkout' ? 'mobilized' : 'returned'} successfully. Transaction logged.`, "check-circle");
+                    document.getElementById('equipment-id').value = '';
+                    document.getElementById('purpose').value = '';
+                    clearSignature();
+                    if (mode === 'return') loadUserEquipment();
+                } else {
+                    showModal("Access Denied", data.message || "System rejected the request.", "x-circle");
+                }
+            } catch (err) {
+                showModal("Connection Lost", "Failed to reach central server.", "wifi-off");
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        async function loadEvents() {
+            try {
+                const res = await fetch('/api/events', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await res.json();
+                const group = document.getElementById('upcoming-duties-group');
+                if (data.success) {
+                    data.events.forEach(ev => {
+                        const opt = document.createElement('option');
+                        opt.value = ev.title;
+                        opt.innerText = ev.title;
+                        group.appendChild(opt);
+                    });
+                }
+            } catch (err) {}
+        }
+
+        async function loadUserEquipment() {
+            const list = document.getElementById('checked-out-list');
+            list.innerHTML = '<div class="text-center py-4 text-[10px] text-slate-500 font-bold uppercase italic">Querying Data...</div>';
+            
+            try {
+                const res = await fetch(`/api/equipment?current_user=${encodeURIComponent(user.displayName)}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await res.json();
+                list.innerHTML = '';
+                
+                if (data.success && data.equipment.length > 0) {
+                    data.equipment.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'flex justify-between items-center glass bg-white/5 hover:bg-primary/10 p-4 rounded-xl cursor-pointer border-white/5 group transition-all';
+                        div.innerHTML = `
+                            <span class="text-xs font-bold text-white group-hover:text-primary transition-colors">${item.name}</span>
+                            <span class="text-[10px] text-primary font-mono font-bold">${item.customId}</span>
+                        `;
+                        div.onclick = () => {
+                            document.getElementById('equipment-id').value = item.customId;
+                            Array.from(list.children).forEach(c => c.classList.remove('border-primary/50', 'bg-primary/5'));
+                            div.classList.add('border-primary/50', 'bg-primary/5');
+                        };
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = '<div class="text-center py-8 text-[10px] text-slate-500 font-bold uppercase italic">No Active Deployments</div>';
+                }
+            } catch (err) {}
+        }
+
+        function toggleLoading(show, text = "") {
+            const overlay = document.getElementById('loading-overlay');
+            if (text) document.getElementById('loading-text').innerText = text;
+            overlay.classList.toggle('hidden', !show);
+        }
+
+        function showModal(title, msg, icon = "info") {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('modal-icon').innerHTML = `<i data-lucide="${icon}" class="text-primary w-10 h-10"></i>`;
+            lucide.createIcons();
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        document.getElementById('modal-close').onclick = () => document.getElementById('custom-modal').classList.add('hidden');
+
+        loadEvents();
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-item">
+            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+            <span class="mnav-label">Home</span>
+        </a>
+        <a href="/team" class="mobile-nav-item">
+            <i data-lucide="users" class="mnav-icon"></i>
+            <span class="mnav-label">Team</span>
+        </a>
+        <a href="/calendar" class="mobile-nav-item">
+            <i data-lucide="calendar" class="mnav-icon"></i>
+            <span class="mnav-label">Events</span>
+        </a>
+        <a href="/attendance" class="mobile-nav-item">
+            <i data-lucide="clock" class="mnav-icon"></i>
+            <span class="mnav-label">Attend</span>
+        </a>
+        <a href="/inventory" class="mobile-nav-item">
+            <i data-lucide="package" class="mnav-icon"></i>
+            <span class="mnav-label">Inventory</span>
+        </a>
+        <a href="/dispatch" class="mobile-nav-item active">
+            <i data-lucide="zap" class="mnav-icon"></i>
+            <span class="mnav-label">Dispatch</span>
+        </a>
+        </div>
+    </nav>
+</body>
+</html>
+

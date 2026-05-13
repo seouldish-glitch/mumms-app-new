@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Intelligence - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        #reader__scan_region { background: transparent !important; }
+        #reader__dashboard { display: none !important; }
+        video { border-radius: 1.5rem; }
+    </style>
+</head>
+<body class="animate-fade">
+
+    <!-- Premium Navigation -->
+    <nav class="nav-container">
+        <div class="nav-bar">
+            <div class="flex items-center gap-3">
+                <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="/home" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/calendar" class="nav-link">Events</a>
+                <a href="/attendance" class="nav-link">Attendance</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <a href="/dispatch" class="nav-link">Dispatch</a>
+                <a href="/admin" class="nav-link active">Admin</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 glass px-4 py-2 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-bold text-xs">
+                        <span id="user-avatar">U</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold" id="current-user-name">Loading...</span>
+                        <span class="text-[10px] text-primary font-medium" id="current-user-role">...</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container space-y-8">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-2">
+                <h2 class="text-4xl font-bold text-white tracking-tight">Admin Intelligence</h2>
+                <p class="text-slate-400 max-w-md">Comprehensive operational oversight and member participation analytics.</p>
+            </div>
+            <div class="flex gap-3">
+                <div class="glass px-5 py-3 rounded-2xl border-l-4 border-l-primary flex items-center gap-3">
+                    <div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-white uppercase tracking-widest">Command Center Online</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left: Member Intelligence Lookup -->
+            <div class="lg:col-span-2 space-y-6">
+                <section class="glass p-8 space-y-8 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32"></div>
+                    
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="users" class="text-primary w-5 h-5"></i>
+                            <h3 class="text-xl font-bold">Member Analytics</h3>
+                        </div>
+                        <div class="w-full max-w-xs">
+                            <select id="member-select" onchange="loadMemberData()" class="input-field appearance-none bg-white/5 border-white/10 pr-10">
+                                <option value="">Select individual member...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="member-data" class="hidden space-y-8 relative z-10 animate-fade">
+                        <!-- Stat Grid -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="glass bg-white/2 p-6 flex flex-col items-center justify-center text-center space-y-2 group hover:bg-primary/5 transition-all">
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Participation Units</p>
+                                <h4 class="text-4xl font-bold text-white group-hover:text-primary transition-colors" id="mbr-attendance-count">0</h4>
+                            </div>
+                            <div class="glass bg-white/2 p-6 flex flex-col items-center justify-center text-center space-y-2 group hover:bg-primary/5 transition-all">
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Active Asset Load</p>
+                                <h4 class="text-4xl font-bold text-white group-hover:text-primary transition-colors" id="mbr-items-count">0</h4>
+                            </div>
+                        </div>
+
+                        <!-- Data Tables -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Attendance History -->
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-2 px-1">
+                                    <i data-lucide="calendar" class="text-primary w-4 h-4"></i>
+                                    <h4 class="text-xs font-bold text-white uppercase tracking-widest">Duty Logs</h4>
+                                </div>
+                                <div class="glass bg-white/2 rounded-2xl overflow-hidden border-white/5">
+                                    <table class="w-full text-left">
+                                        <thead>
+                                            <tr class="bg-white/5">
+                                                <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Objective</th>
+                                                <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mbr-attendance-list" class="divide-y divide-white/5">
+                                            <!-- Logs -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Equipment History -->
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-2 px-1">
+                                    <i data-lucide="package" class="text-primary w-4 h-4"></i>
+                                    <h4 class="text-xs font-bold text-white uppercase tracking-widest">Asset History</h4>
+                                </div>
+                                <div class="glass bg-white/2 rounded-2xl overflow-hidden border-white/5">
+                                    <table class="w-full text-left">
+                                        <thead>
+                                            <tr class="bg-white/5">
+                                                <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Asset</th>
+                                                <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="mbr-dispatch-list" class="divide-y divide-white/5">
+                                            <!-- Logs -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeholder -->
+                    <div id="lookup-placeholder" class="py-24 flex flex-col items-center justify-center text-center space-y-4">
+                        <div class="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 mb-4">
+                            <i data-lucide="search" class="text-slate-500 w-10 h-10"></i>
+                        </div>
+                        <p class="text-slate-500 text-sm italic">Select a member to view operational intelligence.</p>
+                    </div>
+                </section>
+
+                <!-- Item Intelligence Tracker -->
+                <section class="glass p-8 space-y-8 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32"></div>
+                    
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="package-search" class="text-primary w-5 h-5"></i>
+                            <h3 class="text-xl font-bold">Item Intelligence</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="item-lookup-id" placeholder="Enter Custom ID (e.g. CAM-01)..." 
+                                   class="input-field bg-white/5 border-white/10 text-sm py-2">
+                            <button onclick="openScanner()" class="p-2 glass hover:bg-primary/10 text-primary border border-primary/20 rounded-xl transition-all" title="Scan QR">
+                                <i data-lucide="camera" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="trackItem()" class="btn-primary px-4 py-2 text-xs">Track</button>
+                        </div>
+                    </div>
+
+                    <div id="item-tracker-data" class="hidden space-y-8 relative z-10 animate-fade">
+                        <!-- Item Header Stats -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="glass bg-white/2 p-5 flex flex-col items-center justify-center text-center space-y-1">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Total Engagements</p>
+                                <h4 class="text-3xl font-bold text-white" id="item-stat-uses">0</h4>
+                            </div>
+                            <div class="glass bg-white/2 p-5 flex flex-col items-center justify-center text-center space-y-1">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Current Custodian</p>
+                                <h4 class="text-xl font-bold text-primary" id="item-stat-user">None</h4>
+                            </div>
+                            <div class="glass bg-white/2 p-5 flex flex-col items-center justify-center text-center space-y-1">
+                                <p class="text-[9px] text-slate-500 uppercase font-bold tracking-widest">Global Status</p>
+                                <span id="item-stat-status" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Available</span>
+                            </div>
+                        </div>
+
+                        <!-- Item Timeline -->
+                        <div class="space-y-4">
+                            <h4 class="text-sm font-bold uppercase tracking-widest text-slate-400">Operational Timeline</h4>
+                            <div id="item-timeline" class="space-y-3">
+                                <!-- Timelines from attendance and dispatch -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="item-lookup-placeholder" class="py-12 flex flex-col items-center justify-center text-center space-y-4 relative z-10">
+                        <div class="w-20 h-20 bg-white/2 border border-white/5 rounded-full flex items-center justify-center">
+                            <i data-lucide="qr-code" class="text-slate-500 w-10 h-10"></i>
+                        </div>
+                        <p class="text-slate-500 text-sm italic">Enter an item ID or scan to view life-cycle analytics.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right: Operations Stream -->
+            <div class="lg:col-span-1 space-y-6">
+                <section class="glass p-8 space-y-8 min-h-full flex flex-col">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="activity" class="text-primary w-5 h-5"></i>
+                            <h3 class="text-xl font-bold">Global Dispatch</h3>
+                        </div>
+                        <span id="log-count" class="text-[10px] font-bold bg-white/5 border border-white/10 px-3 py-1 rounded-full text-slate-500 uppercase tracking-widest">Recent</span>
+                    </div>
+
+                    <div id="global-dispatch-list" class="space-y-4 flex-1">
+                        <!-- Global logs -->
+                        <div class="text-center py-20 text-slate-500 italic">Synchronizing logs...</div>
+                    </div>
+                </section>
+
+                <section class="glass p-8 space-y-8 flex flex-col">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="zap" class="text-primary w-5 h-5"></i>
+                        <h3 class="text-xl font-bold">Active Assets</h3>
+                    </div>
+                    <div id="global-active-items" class="space-y-3">
+                        <div class="text-center py-10 text-slate-500 italic text-sm">No assets currently in use.</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scanner Modal -->
+    <div id="scanner-modal" class="hidden fixed inset-0 bg-bg-dark/90 backdrop-blur-xl flex flex-col items-center justify-center z-[20000] p-4">
+        <div class="w-full max-w-md space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold text-white">Item Scanner</h3>
+                <button onclick="closeScanner()" class="p-2 hover:bg-white/5 rounded-xl transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="relative bg-black/40 rounded-3xl overflow-hidden aspect-square border border-white/5">
+                <div id="reader" class="w-full h-full"></div>
+                <div class="absolute inset-12 border border-primary/20 rounded-2xl pointer-events-none">
+                    <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary"></div>
+                    <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary"></div>
+                    <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary"></div>
+                    <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary"></div>
+                </div>
+            </div>
+            <p class="text-center text-slate-500 text-sm italic">Align the equipment QR code within the frame.</p>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let html5QrCode = null;
+
+        function openScanner() {
+            document.getElementById('scanner-modal').classList.remove('hidden');
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                (decodedText) => {
+                    document.getElementById('item-lookup-id').value = decodedText;
+                    closeScanner();
+                    trackItem();
+                },
+                (errorMessage) => { /* quiet errors */ }
+            ).catch(err => {
+                alert("Camera access denied or error.");
+                closeScanner();
+            });
+        }
+
+        function closeScanner() {
+            document.getElementById('scanner-modal').classList.add('hidden');
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode = null;
+                }).catch(err => console.error(err));
+            }
+        }
+
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || (user.role !== 'MIC' && user.role !== 'President')) {
+            window.location.href = '/home';
+        } else {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/logout';
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/users', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await res.json();
+                const select = document.getElementById('member-select');
+                if (data.success) {
+                    data.users.forEach(u => {
+                        const opt = document.createElement('option');
+                        opt.value = u.email;
+                        opt.innerText = u.displayName || u.email;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {}
+        }
+
+        async function loadGlobalDispatch() {
+            try {
+                const res = await fetch('/api/dispatch', {
+                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                });
+                const data = await res.json();
+                const list = document.getElementById('global-dispatch-list');
+                list.innerHTML = '';
+                
+                if (data.success && data.logs.length > 0) {
+                    data.logs.slice(0, 10).forEach(log => {
+                        const div = document.createElement('div');
+                        div.className = 'glass bg-white/2 p-4 flex justify-between items-center group hover:bg-white/5 transition-all';
+                        div.innerHTML = `
+                            <div class="space-y-1">
+                                <h4 class="text-xs font-bold text-white group-hover:text-primary transition-colors">${log.customId}</h4>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">${log.member}</p>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${log.type === 'checkout' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}">
+                                ${log.type === 'checkout' ? 'Out' : 'In'}
+                            </span>
+                        `;
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = '<div class="text-center py-20 text-slate-500 italic">No global operations logged.</div>';
+                }
+
+                // Load Active Items
+                const activeRes = await fetch('/api/admin/equipment/active', {
+                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                });
+                const activeData = await activeRes.json();
+                const activeList = document.getElementById('global-active-items');
+                if (activeData.success && activeData.items.length > 0) {
+                    activeList.innerHTML = '';
+                    activeData.items.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'glass bg-white/2 p-4 flex flex-col gap-2 group hover:bg-primary/5 transition-all';
+                        div.innerHTML = `
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs font-bold text-white">${item.customId}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20">${item.status}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                                <i data-lucide="user" class="w-3 h-3"></i>
+                                <span>${item.current_user || 'Assigned'}</span>
+                            </div>
+                        `;
+                        activeList.appendChild(div);
+                    });
+                    lucide.createIcons();
+                }
+            } catch (err) {}
+        }
+
+        async function trackItem() {
+            const id = document.getElementById('item-lookup-id').value.trim();
+            const container = document.getElementById('item-tracker-data');
+            const placeholder = document.getElementById('item-lookup-placeholder');
+            
+            if (!id) return;
+
+            try {
+                const res = await fetch(`/api/admin/equipment/tracker?customId=${encodeURIComponent(id)}`, {
+                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    placeholder.classList.add('hidden');
+                    container.classList.remove('hidden');
+                    
+                    document.getElementById('item-stat-uses').innerText = data.stats.total_uses;
+                    document.getElementById('item-stat-user').innerText = data.item.current_user || 'None';
+                    
+                    const status = document.getElementById('item-stat-status');
+                    status.innerText = data.item.status;
+                    status.className = `px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                        data.item.status === 'available' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                    }`;
+
+                    const timeline = document.getElementById('item-timeline');
+                    timeline.innerHTML = '';
+                    
+                    const allLogs = [
+                        ...data.stats.attendance_logs.map(l => ({...l, source: 'Mission'})),
+                        ...data.stats.dispatch_logs.map(l => ({...l, source: 'Manual'}))
+                    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    if (allLogs.length > 0) {
+                        allLogs.forEach(log => {
+                            const div = document.createElement('div');
+                            div.className = 'flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors border border-white/5';
+                            div.innerHTML = `
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-white">${log.source}: ${log.event_title || log.purpose || 'Operation'}</span>
+                                    <span class="text-[10px] text-slate-500">${new Date(log.timestamp).toLocaleString()} • ${log.member || log.user_email}</span>
+                                </div>
+                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                    (log.type === 'check_in' || log.type === 'checkout') ? 'text-primary' : 'text-slate-500'
+                                }">${log.type}</span>
+                            `;
+                            timeline.appendChild(div);
+                        });
+                    } else {
+                        timeline.innerHTML = '<p class="text-center py-4 text-slate-500 text-xs italic">No historical logs found.</p>';
+                    }
+                    lucide.createIcons();
+                } else {
+                    alert(data.message || "Equipment not found");
+                }
+            } catch (err) {
+                alert("Failed to track item");
+            }
+        }
+
+        async function loadMemberData() {
+            const email = document.getElementById('member-select').value;
+            const container = document.getElementById('member-data');
+            const placeholder = document.getElementById('lookup-placeholder');
+            
+            if (!email) {
+                container.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+
+            // Attendance
+            try {
+                const res = await fetch(`/api/attendance?email=${email}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+                });
+                const data = await res.json();
+                const list = document.getElementById('mbr-attendance-list');
+                list.innerHTML = '';
+                if (data.success) {
+                    document.getElementById('mbr-attendance-count').innerText = data.logs.length;
+                    data.logs.forEach(log => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-4 py-3 text-xs font-bold text-white">${log.event_title}</td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${log.type === 'check_in' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-orange-500/10 text-orange-400'}">
+                                    ${log.type === 'check_in' ? 'In' : 'Out'}
+                                </span>
+                            </td>
+                        `;
+                        list.appendChild(tr);
+                    });
+                }
+            } catch (err) {}
+
+            // Dispatch
+            try {
+                const res = await fetch('/api/dispatch', {
+                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                });
+                const data = await res.json();
+                const list = document.getElementById('mbr-dispatch-list');
+                list.innerHTML = '';
+                if (data.success) {
+                    const select = document.getElementById('member-select');
+                    const name = select.options[select.selectedIndex].text;
+                    const userLogs = data.logs.filter(l => l.member === name);
+                    
+                    const checkouts = userLogs.filter(l => l.type === 'checkout').length;
+                    const returns = userLogs.filter(l => l.type === 'return').length;
+                    document.getElementById('mbr-items-count').innerText = Math.max(0, checkouts - returns);
+
+                    userLogs.forEach(log => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="px-4 py-3 text-xs font-bold text-white">${log.customId}</td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${log.type === 'checkout' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-blue-500/10 text-blue-400'}">
+                                    ${log.type === 'checkout' ? 'Out' : 'In'}
+                                </span>
+                            </td>
+                        `;
+                        list.appendChild(tr);
+                    });
+                }
+            } catch (err) {}
+        }
+
+        loadUsers();
+        loadGlobalDispatch();
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-item">
+            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+            <span class="mnav-label">Home</span>
+        </a>
+        <a href="/team" class="mobile-nav-item">
+            <i data-lucide="users" class="mnav-icon"></i>
+            <span class="mnav-label">Team</span>
+        </a>
+        <a href="/calendar" class="mobile-nav-item">
+            <i data-lucide="calendar" class="mnav-icon"></i>
+            <span class="mnav-label">Events</span>
+        </a>
+        <a href="/attendance" class="mobile-nav-item">
+            <i data-lucide="clock" class="mnav-icon"></i>
+            <span class="mnav-label">Attend</span>
+        </a>
+        <a href="/inventory" class="mobile-nav-item">
+            <i data-lucide="package" class="mnav-icon"></i>
+            <span class="mnav-label">Inventory</span>
+        </a>
+        <a href="/dispatch" class="mobile-nav-item">
+            <i data-lucide="zap" class="mnav-icon"></i>
+            <span class="mnav-label">Dispatch</span>
+        </a>
+        </div>
+    </nav>
+</body>
+</html>
+

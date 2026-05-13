@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Calendar - MUMMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .calendar-day.has-event::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+    </style>
+</head>
+<body class="animate-fade">
+
+    <!-- Premium Navigation -->
+    <nav class="nav-container">
+        <div class="nav-bar">
+            <div class="flex items-center gap-3">
+                <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+                <div>
+                    <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                </div>
+            </div>
+
+            <div class="nav-links">
+                <a href="/home" class="nav-link">Dashboard</a>
+                <a href="/team" class="nav-link">Team</a>
+                <a href="/calendar" class="nav-link active">Events</a>
+                <a href="/attendance" class="nav-link">Attendance</a>
+                <a href="/inventory" class="nav-link">Inventory</a>
+                <a href="/dispatch" class="nav-link">Dispatch</a>
+                <a href="/admin" id="admin-nav" class="nav-link hidden">Admin</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-3 glass px-4 py-2 rounded-xl">
+                    <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-black font-bold text-xs">
+                        <span id="user-avatar">U</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold" id="current-user-name">Loading...</span>
+                        <span class="text-[10px] text-primary font-medium" id="current-user-role">...</span>
+                    </div>
+                </div>
+                <button onclick="logout()" class="p-2 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-xl transition-colors border border-transparent hover:border-red-500/20">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container space-y-8">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div class="space-y-2">
+                <h2 class="text-4xl font-bold text-white tracking-tight">Event Calendar</h2>
+                <p class="text-slate-400 max-w-md">Coordinate media coverage and manage unit deployment across college events.</p>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left: Calendar Grid -->
+            <div id="calendar-container" class="lg:col-span-2 glass p-8 space-y-8">
+                <div class="flex justify-between items-center">
+                    <h3 id="calendar-title" class="text-2xl font-bold text-white">Month Year</h3>
+                    <div class="flex gap-2">
+                        <button id="prev-month" class="p-2 glass hover:bg-primary/10 hover:text-primary transition-colors">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <button id="next-month" class="p-2 glass hover:bg-primary/10 hover:text-primary transition-colors">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-4">
+                    <!-- Day Labels -->
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sun</div>
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Mon</div>
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tue</div>
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Wed</div>
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Thu</div>
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Fri</div>
+                    <div class="text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sat</div>
+                    
+                    <!-- Days Generated by JS -->
+                    <div class="contents" id="calendar-grid"></div>
+                </div>
+            </div>
+
+            <!-- Right: Event Operations (Admin only) -->
+            <div id="duty-form-container" class="hidden space-y-8">
+                <section class="glass p-8 space-y-6">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="plus-circle" class="text-primary w-5 h-5"></i>
+                        <h3 class="text-xl font-bold" id="form-header">Schedule Event</h3>
+                    </div>
+
+                    <form id="eventForm" class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Event Title</label>
+                            <input type="text" id="event-title" required placeholder="Inter-house Meet 2026" class="input-field bg-white/5 border-white/10">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Date</label>
+                                <input type="date" id="event-date" required class="input-field bg-white/5 border-white/10">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Clearance</label>
+                                <select id="event-status" class="input-field bg-white/5 border-white/10 appearance-none">
+                                    <option value="Planned">Planned</option>
+                                    <option value="Confirmed">Confirmed</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Venue</label>
+                            <input type="text" id="event-venue" required placeholder="Main Auditorium" class="input-field bg-white/5 border-white/10">
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Assign Force</label>
+                            <div class="glass p-4 max-h-40 overflow-y-auto space-y-2 custom-scrollbar" id="members-list">
+                                <p class="text-[10px] text-slate-500 italic">Deploying personnel data...</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="save-btn" class="btn-primary w-full py-4 uppercase tracking-widest text-xs">Authorize Mission</button>
+                    </form>
+                </section>
+            </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <section class="glass p-8 space-y-8">
+            <div class="flex items-center gap-3">
+                <i data-lucide="list" class="text-primary w-5 h-5"></i>
+                <h3 class="text-2xl font-bold text-white">Strategic Timeline</h3>
+            </div>
+            <div id="events-list" class="space-y-4">
+                <!-- Event cards go here -->
+                <div class="text-center py-20 bg-white/5 rounded-3xl text-slate-500 italic">No operations logged in this sector.</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal System -->
+    <div id="custom-modal" class="hidden fixed inset-0 bg-bg-dark/80 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
+        <div class="glass max-w-md w-full p-8 text-center space-y-6">
+            <div id="modal-icon" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto">
+                <i data-lucide="info" class="text-primary w-8 h-8"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 id="modal-title" class="text-2xl font-bold text-white">System Signal</h3>
+                <p id="modal-msg" class="text-slate-400"></p>
+            </div>
+            <button id="modal-close" class="btn-primary w-full">Acknowledged</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // Check login
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/login';
+        } else {
+            document.getElementById('current-user-name').innerText = user.displayName || 'User';
+            document.getElementById('current-user-role').innerText = user.role || 'Member';
+            
+            const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
+            document.getElementById('user-avatar').innerText = initials;
+
+            if (user.role === 'MIC' || user.role === 'President') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+                document.getElementById('duty-form-container').classList.remove('hidden');
+            } else {
+                document.getElementById('calendar-container').classList.add('lg:col-span-3');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/logout';
+        }
+
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        async function generateCalendar(year, month) {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+            document.getElementById('calendar-title').innerText = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Fetch events for marking
+            const res = await fetch('/api/events', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+            });
+            const data = await res.json();
+            const events = data.success ? data.events : [];
+
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += '<div></div>';
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const hasEvent = events.some(e => e.date === dateStr);
+                
+                const dayEl = document.createElement('div');
+                dayEl.className = `calendar-day glass-hover cursor-pointer border border-white/5 ${hasEvent ? 'has-event bg-primary/5 text-primary border-primary/20' : 'hover:bg-white/5'}`;
+                dayEl.innerText = day;
+                dayEl.onclick = () => showDateInfo(dateStr, events.filter(e => e.date === dateStr));
+                grid.appendChild(dayEl);
+            }
+            
+            updateTimeline(events);
+        }
+
+        function showDateInfo(date, dayEvents) {
+            if (dayEvents.length > 0) {
+                const list = dayEvents.map(e => `• ${e.title} @ ${e.venue}`).join('\n');
+                showModal(`Schedule for ${date}`, list, "calendar-days");
+            } else {
+                showModal(date, "No operations scheduled for this timeline sector.", "shield-off");
+            }
+        }
+
+        function updateTimeline(events) {
+            const list = document.getElementById('events-list');
+            list.innerHTML = '';
+            
+            if (events.length > 0) {
+                events.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ev => {
+                    const isAssigned = user && ev.assigned_members && ev.assigned_members.includes(user.displayName);
+                    const isAdmin = user && (user.role === 'MIC' || user.role === 'President');
+                    
+                    const item = document.createElement('div');
+                    item.className = `glass glass-hover p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-l-4 ${isAssigned ? 'border-l-primary bg-primary/5' : 'border-l-white/10'}`;
+                    
+                    item.innerHTML = `
+                        <div class="space-y-1 flex-1">
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-xl font-bold text-white">${ev.title}</h4>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-slate-400 font-bold uppercase tracking-widest">${ev.status}</span>
+                            </div>
+                            <div class="flex flex-wrap gap-4 text-xs text-slate-500">
+                                <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${ev.date}</span>
+                                <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${ev.venue}</span>
+                                <span class="flex items-center gap-1 text-primary"><i data-lucide="users" class="w-3 h-3"></i> ${ev.assigned_members.length} Personnel</span>
+                            </div>
+                            ${isAssigned ? '<p class="text-[10px] text-primary font-bold animate-pulse mt-2 flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Active Deployment: You are on duty.</p>' : ''}
+                        </div>
+                        <div class="flex gap-2">
+                            ${isAdmin ? `
+                                <button onclick="editEvent('${ev._id}')" class="p-2 glass hover:bg-white/10 text-slate-400 hover:text-white transition-colors"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deleteEvent('${ev._id}')" class="p-2 glass hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            ` : ''}
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+                lucide.createIcons();
+            } else {
+                list.innerHTML = '<div class="text-center py-20 bg-white/5 rounded-3xl text-slate-500 italic">No active operations found.</div>';
+            }
+        }
+
+        // Form Logic
+        document.getElementById('eventForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('save-btn');
+            const eventId = btn.getAttribute('data-id');
+            const originalText = btn.innerText;
+            
+            btn.disabled = true;
+            btn.innerText = "Authorizing...";
+
+            const payload = {
+                title: document.getElementById('event-title').value,
+                date: document.getElementById('event-date').value,
+                status: document.getElementById('event-status').value,
+                venue: document.getElementById('event-venue').value,
+                assigned_members: Array.from(document.querySelectorAll('.member-check:checked')).map(c => c.value),
+                user_role: user.role
+            };
+
+            try {
+                const url = eventId ? `/api/events/${eventId}` : '/api/events';
+                const method = eventId ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    showModal("Authorized", `Operation sector ${eventId ? 'updated' : 'initialized'} successfully.`, "check-circle");
+                    this.reset();
+                    btn.removeAttribute('data-id');
+                    btn.innerText = "Authorize Mission";
+                    generateCalendar(currentYear, currentMonth);
+                } else {
+                    showModal("Authorization Failed", data.message, "alert-triangle");
+                }
+            } catch (err) {
+                showModal("Network Failure", "Lost connection to the command center.", "wifi-off");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Initialize Members List
+        fetch('/api/users').then(r => r.json()).then(data => {
+            const list = document.getElementById('members-list');
+            list.innerHTML = '';
+            if (data.success) {
+                data.users.filter(u => u.role !== 'MIC' && u.role !== 'President').forEach(u => {
+                    const div = document.createElement('label');
+                    div.className = 'flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition-colors';
+                    div.innerHTML = `
+                        <input type="checkbox" value="${u.displayName}" class="member-check accent-primary bg-bg-dark border-white/10 rounded">
+                        <span class="text-xs text-slate-300">${u.displayName}</span>
+                        <span class="text-[8px] text-slate-600 ml-auto uppercase font-bold">${u.role}</span>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+        });
+
+        document.getElementById('prev-month').onclick = () => { currentMonth--; if(currentMonth < 0){currentMonth=11;currentYear--;} generateCalendar(currentYear, currentMonth); };
+        document.getElementById('next-month').onclick = () => { currentMonth++; if(currentMonth > 11){currentMonth=0;currentYear++;} generateCalendar(currentYear, currentMonth); };
+
+        async function deleteEvent(id) {
+            if (confirm("Decommission this operation?")) {
+                await fetch(`/api/events/${id}?user_role=${user.role}`, { method: 'DELETE' });
+                generateCalendar(currentYear, currentMonth);
+            }
+        }
+
+        async function editEvent(id) {
+            const res = await fetch('/api/events');
+            const data = await res.json();
+            const ev = data.events.find(e => e._id === id);
+            if (ev) {
+                document.getElementById('event-title').value = ev.title;
+                document.getElementById('event-date').value = ev.date;
+                document.getElementById('event-venue').value = ev.venue;
+                document.getElementById('event-status').value = ev.status;
+                document.querySelectorAll('.member-check').forEach(c => c.checked = ev.assigned_members.includes(c.value));
+                const btn = document.getElementById('save-btn');
+                btn.innerText = "Update Sector Data";
+                btn.setAttribute('data-id', id);
+                document.getElementById('duty-form-container').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function showModal(title, msg, icon = "info") {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('modal-icon').innerHTML = `<i data-lucide="${icon}" class="text-primary w-8 h-8"></i>`;
+            lucide.createIcons();
+            document.getElementById('custom-modal').classList.remove('hidden');
+        }
+        document.getElementById('modal-close').onclick = () => document.getElementById('custom-modal').classList.add('hidden');
+
+        generateCalendar(currentYear, currentMonth);
+    </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-inner">
+        <a href="/home" class="mobile-nav-item">
+            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+            <span class="mnav-label">Home</span>
+        </a>
+        <a href="/team" class="mobile-nav-item">
+            <i data-lucide="users" class="mnav-icon"></i>
+            <span class="mnav-label">Team</span>
+        </a>
+        <a href="/calendar" class="mobile-nav-item active">
+            <i data-lucide="calendar" class="mnav-icon"></i>
+            <span class="mnav-label">Events</span>
+        </a>
+        <a href="/attendance" class="mobile-nav-item">
+            <i data-lucide="clock" class="mnav-icon"></i>
+            <span class="mnav-label">Attend</span>
+        </a>
+        <a href="/inventory" class="mobile-nav-item">
+            <i data-lucide="package" class="mnav-icon"></i>
+            <span class="mnav-label">Inventory</span>
+        </a>
+        <a href="/dispatch" class="mobile-nav-item">
+            <i data-lucide="zap" class="mnav-icon"></i>
+            <span class="mnav-label">Dispatch</span>
+        </a>
+        </div>
+    </nav>
+</body>
+</html>
+
