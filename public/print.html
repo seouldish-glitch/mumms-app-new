@@ -58,7 +58,6 @@
         </div>
     </div>
 
-    <!-- Print Only Grid -->
     <div id="actual-print-grid" class="hidden print:grid print:grid-cols-4 print:gap-4 p-4"></div>
 
     <script>
@@ -77,11 +76,11 @@
                 const printGrid = document.getElementById('actual-print-grid');
                 grid.innerHTML = '';
                 printGrid.innerHTML = '';
-                
+
                 if (data.success && data.equipment.length > 0) {
                     data.equipment.forEach((item, index) => {
                         const id = item.customId || `ID-${index}`;
-                        
+
                         const card = document.createElement('div');
                         card.className = 'qr-card shadow-2xl';
                         card.innerHTML = `
@@ -91,13 +90,11 @@
                             <div class="text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">${id}</div>
                         `;
                         grid.appendChild(card);
-                        
-                        // For printing
+
                         const printCard = card.cloneNode(true);
                         printCard.className = 'qr-card border border-slate-200';
                         printGrid.appendChild(printCard);
-                        
-                        // Generate QR for both
+
                         setTimeout(() => {
                             new QRCode(card.querySelector(`#qr-${id}`), {
                                 text: id,

@@ -100,7 +100,7 @@
                 <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
                 <div>
                     <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
-                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">ST.BENEDICTS COLLEGE MEDIA</p>
                 </div>
             </div>
 
@@ -141,7 +141,7 @@
             <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
             <div>
                 <h1 class="text-white font-bold text-base tracking-tight">MUMMS</h1>
-                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">St. Benedict's Media</p>
+                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">ST.BENEDICTS COLLEGE MEDIA</p>
             </div>
         </div>
         <button onclick="logout()" class="btn-logout-mobile" title="Logout">
@@ -165,7 +165,7 @@
             <div class="space-y-6">
                 <section class="glass p-8 space-y-6 relative overflow-hidden group">
                     <div class="absolute inset-0 bg-primary/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                    
+
                     <div class="flex items-center justify-between relative z-10">
                         <div class="flex items-center gap-3">
                             <i data-lucide="scan" class="text-primary w-5 h-5"></i>
@@ -270,7 +270,6 @@
         </div>
     </main>
 
-    <!-- Custom Modal -->
     <div id="custom-modal" class="fixed inset-0 z-[200000] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
         <div class="glass max-w-sm w-full p-8 text-center space-y-6 relative z-10 border-white/10">
@@ -327,7 +326,7 @@
         } else {
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
-            
+
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
@@ -353,7 +352,7 @@
             const btn1 = document.getElementById('tab-checkout');
             const btn2 = document.getElementById('tab-return');
             const actionBtn = document.getElementById('action-btn');
-            
+
             if (isCheckout) {
                 btn1.className = "flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all bg-primary text-black";
                 btn2.className = "flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all text-slate-500 hover:text-white";
@@ -366,7 +365,7 @@
                 actionBtn.innerText = "Execute Return Protocol";
                 actionBtn.classList.add('bg-primary', 'text-black');
             }
-            
+
             document.getElementById('checked-out-list-container').classList.toggle('hidden', isCheckout);
             document.getElementById('purpose-container').classList.toggle('hidden', !isCheckout);
             if (!isCheckout) loadUserEquipment();
@@ -376,7 +375,7 @@
             document.getElementById('start-btn').classList.add('hidden');
             document.getElementById('stop-btn').classList.remove('hidden');
             document.getElementById('scanner-placeholder').classList.add('hidden');
-            
+
             html5QrCode = new Html5Qrcode("reader");
             const config = { 
                 fps: 25, 
@@ -386,7 +385,7 @@
                     focusMode: "continuous"
                 }
             };
-            
+
             html5QrCode.start(
                 { facingMode: "environment" }, 
                 config, 
@@ -394,9 +393,9 @@
                     if (navigator.vibrate) navigator.vibrate(100);
                     document.getElementById('equipment-id').value = text;
                     stopScanner();
-                    
+
                     showModal("Scan Successful", "The QR code has been captured and validated correctly.", "check-circle");
-                    
+
                     document.getElementById('dispatch-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     const input = document.getElementById('equipment-id');
                     input.classList.add('border-primary', 'bg-primary/5');
@@ -467,14 +466,14 @@
             const id = document.getElementById('equipment-id').value;
             const purpose = document.getElementById('purpose').value;
             const isCheckout = mode === 'checkout';
-            
+
             if (!id || (isCheckout && !purpose)) {
                 showToast("Form Incomplete", "alert-circle", "error");
                 return;
             }
-            
+
             toggleLoading(true, "Transmitting Protocol...");
-            
+
             try {
                 const res = await fetch('/api/dispatch', {
                     method: 'POST',
@@ -491,7 +490,7 @@
                     })
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     showToast("Protocol Authorized", "check-circle", "success");
                     document.getElementById('equipment-id').value = '';

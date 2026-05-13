@@ -59,7 +59,7 @@
                 <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
                 <div>
                     <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
-                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">ST.BENEDICTS COLLEGE MEDIA</p>
                 </div>
             </div>
 
@@ -100,7 +100,7 @@
             <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
             <div>
                 <h1 class="text-white font-bold text-base tracking-tight">MUMMS</h1>
-                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">St. Benedict's Media</p>
+                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">ST.BENEDICTS COLLEGE MEDIA</p>
             </div>
         </div>
         <button onclick="logout()" class="btn-logout-mobile" title="Logout">
@@ -109,7 +109,7 @@
     </div>
 
     <main class="container space-y-8">
-        
+
         <section class="glass hero-section p-8 flex flex-col md:flex-row justify-between items-center gap-6 overflow-hidden relative">
             <div class="relative z-10 w-full md:w-auto">
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest mb-4">
@@ -127,13 +127,13 @@
         </section>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             <div class="lg:col-span-2 space-y-8">
-                
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="glass stat-card p-6 flex items-center justify-between">
                         <div>
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">My Events</p>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Events</p>
                             <h3 class="text-4xl font-bold text-white" id="count-events">0</h3>
                         </div>
                         <div class="circle-progress-v2">
@@ -146,7 +146,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="glass stat-card p-6 flex items-center justify-between">
                         <div>
                             <p class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">Items Held</p>
@@ -182,7 +182,7 @@
             </div>
 
             <div class="space-y-8">
-                
+
                 <section class="glass p-6">
                     <div class="flex items-center gap-3 mb-6">
                         <i data-lucide="clock" class="text-primary"></i>
@@ -235,7 +235,7 @@
             document.getElementById('profile-name').innerText = user.displayName ? user.displayName.split(' ').slice(0, 2).join(' ') : 'Member';
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
-            
+
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
@@ -257,7 +257,7 @@
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const data = await res.json();
-                
+
                 const list = document.getElementById('active-equipment-list');
                 if (data.success && data.equipment.length > 0) {
                     list.innerHTML = '';
@@ -291,7 +291,7 @@
                     const myEvents = evData.events.filter(e => e.assigned_members && e.assigned_members.includes(user.displayName));
                     document.getElementById('count-events').innerText = myEvents.length;
                     document.getElementById('circle-events').style.strokeDashoffset = 251.2 - (251.2 * Math.min(myEvents.length / 10, 1));
-                    
+
                     const duties = document.getElementById('upcoming-duties');
                     if (myEvents.length > 0) {
                         duties.innerHTML = '';
@@ -365,7 +365,7 @@
             const toast = document.getElementById('toast');
             const toastMsg = document.getElementById('toast-msg');
             const toastIcon = document.getElementById('toast-icon');
-            
+
             toastMsg.innerText = msg;
             toastIcon.setAttribute('data-lucide', icon);
             lucide.createIcons();

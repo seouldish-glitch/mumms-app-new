@@ -67,7 +67,7 @@
                 <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
                 <div>
                     <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
-                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">ST.BENEDICTS COLLEGE MEDIA</p>
                 </div>
             </div>
 
@@ -108,7 +108,7 @@
             <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
             <div>
                 <h1 class="text-white font-bold text-base tracking-tight">MUMMS</h1>
-                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">St. Benedict's Media</p>
+                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">ST.BENEDICTS COLLEGE MEDIA</p>
             </div>
         </div>
         <button onclick="logout()" class="btn-logout-mobile" title="Logout">
@@ -253,7 +253,7 @@
         } else {
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
-            
+
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
@@ -280,10 +280,10 @@
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
             document.getElementById('calendar-title').innerText = `${monthNames[month]} ${year}`;
-            
+
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            
+
             const res = await fetch('/api/events', {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
             });
@@ -293,11 +293,11 @@
             for (let i = 0; i < firstDay; i++) {
                 grid.innerHTML += '<div></div>';
             }
-            
+
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const hasEvent = events.some(e => e.date === dateStr);
-                
+
                 const dayEl = document.createElement('div');
                 dayEl.className = `calendar-day glass-hover cursor-pointer border border-white/5 ${hasEvent ? 'has-event bg-primary/5 text-primary border-primary/20' : 'hover:bg-white/5'}`;
                 dayEl.innerText = day;
@@ -319,7 +319,7 @@
 
             renderEventList(upcomingList, upcoming, true);
             renderEventList(pastList, past, false);
-            
+
             updateTimeline(events);
             lucide.createIcons();
         }
@@ -365,15 +365,15 @@
         function updateTimeline(events) {
             const list = document.getElementById('events-list');
             list.innerHTML = '';
-            
+
             if (events.length > 0) {
                 events.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ev => {
                     const isAssigned = user && ev.assigned_members && ev.assigned_members.includes(user.displayName);
                     const isAdmin = user && ['MIC', 'President', 'Web Developer'].includes(user.role);
-                    
+
                     const item = document.createElement('div');
                     item.className = `glass glass-hover p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-l-4 ${isAssigned ? 'border-l-primary bg-primary/5' : 'border-l-white/10'}`;
-                    
+
                     item.innerHTML = `
                         <div class="space-y-1 flex-1">
                             <div class="flex items-center gap-2">
@@ -407,7 +407,7 @@
             const btn = document.getElementById('save-btn');
             const eventId = btn.getAttribute('data-id');
             const originalText = btn.innerText;
-            
+
             btn.disabled = true;
             btn.innerText = "Authorizing...";
 
@@ -432,7 +432,7 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     showToast("Mission Sector Authorized", "check-circle", "success");
                     this.reset();

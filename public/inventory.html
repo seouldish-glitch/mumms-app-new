@@ -46,7 +46,7 @@
                 <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
                 <div>
                     <h1 class="text-white font-bold text-sm tracking-wide">MUMMS</h1>
-                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">St. Benedict's Media</p>
+                    <p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">ST.BENEDICTS COLLEGE MEDIA</p>
                 </div>
             </div>
 
@@ -87,7 +87,7 @@
             <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
             <div>
                 <h1 class="text-white font-bold text-base tracking-tight">MUMMS</h1>
-                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">St. Benedict's Media</p>
+                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">ST.BENEDICTS COLLEGE MEDIA</p>
             </div>
         </div>
         <button onclick="logout()" class="btn-logout-mobile" title="Logout">
@@ -116,7 +116,7 @@
                         <i data-lucide="bar-chart-3" class="text-primary w-4 h-4"></i>
                         <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Asset Analytics</h3>
                     </div>
-                    
+
                     <div class="space-y-4">
                         <div class="glass bg-white/5 p-4 flex justify-between items-center">
                             <div>
@@ -211,7 +211,7 @@
         } else {
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
-            
+
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
@@ -237,11 +237,11 @@
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     equipmentData = data.equipment;
                     renderEquipment(equipmentData);
-                    
+
                     document.getElementById('total-assets').innerText = equipmentData.length;
                     document.getElementById('total-categories').innerText = new Set(equipmentData.map(i => i.category)).size;
                     document.getElementById('total-available').innerText = equipmentData.filter(i => i.status === 'available').length;
@@ -254,15 +254,15 @@
         function renderEquipment(items) {
             const list = document.getElementById('inventory-list');
             list.innerHTML = '';
-            
+
             if (items.length > 0) {
                 items.forEach(item => {
                     const isAdmin = user && (user.role === 'MIC' || user.role === 'President');
                     const isAvailable = item.status === 'available';
-                    
+
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-white/2 transition-colors group';
-                    
+
                     tr.innerHTML = `
                         <td class="px-6 py-5">
                             <div class="flex flex-col">
@@ -311,7 +311,7 @@
         function downloadQR(id, name) {
             const qrContainer = document.getElementById('qr-hidden');
             qrContainer.innerHTML = '';
-            
+
             new QRCode(qrContainer, {
                 text: id,
                 width: 500,
@@ -320,7 +320,7 @@
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
             });
-            
+
             setTimeout(() => {
                 const img = qrContainer.querySelector('img');
                 if (img) {
