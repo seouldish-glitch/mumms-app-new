@@ -329,6 +329,34 @@ def login():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+@app.route('/api/auth/change-password', methods=['POST'])
+@token_required
+def change_password():
+    data = request.json
+    if not data:
+        return jsonify({"success": False, "message": "Missing request body"}), 400
+        
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+    
+    if not current_password or not new_password:
+        return jsonify({"success": False, "message": "Missing current or new password"}), 400
+        
+    email = request.user.get('email')
+    collection = get_collection("users")
+    
+    try:
+        # Verify current password
+        user = collection.find_one({"email": email, "password": current_password})
+        if not user:
+            return jsonify({"success": False, "message": "Incorrect current password"}), 401
+            
+        # Update to new password
+        collection.update_one({"email": email}, {"$set": {"password": new_password}})
+        return jsonify({"success": True, "message": "Password updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 @app.route('/logout')
 def logout():
     response = make_response(redirect('/login'))

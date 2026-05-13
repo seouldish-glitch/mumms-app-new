@@ -164,6 +164,26 @@
                         <div class="text-slate-500 text-sm text-center py-8">No recent activity logs.</div>
                     </div>
                 </section>
+
+                <!-- Security Settings -->
+                <section class="glass p-6">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="lock" class="text-primary"></i>
+                        <h3 class="text-xl font-bold">Security Settings</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-slate-500">Current Password</label>
+                            <input type="password" id="current-pass" class="input-field" placeholder="••••••••">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase font-bold text-slate-500">New Password</label>
+                            <input type="password" id="new-pass" class="input-field" placeholder="••••••••">
+                        </div>
+                        <button onclick="changePassword()" class="btn-primary w-full py-3 text-[10px] uppercase font-bold tracking-widest">Update Password</button>
+                        <p id="password-status" class="hidden text-center text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg"></p>
+                    </div>
+                </section>
             </div>
         </div>
     </main>
@@ -277,6 +297,51 @@
             } catch (err) {
                 console.error("Dashboard error:", err);
             }
+        }
+
+        async function changePassword() {
+            const currentPass = document.getElementById('current-pass').value;
+            const newPass = document.getElementById('new-pass').value;
+            const status = document.getElementById('password-status');
+
+            if (!currentPass || !newPass) {
+                showStatus("Please fill all fields", "error");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+                    },
+                    body: JSON.stringify({ currentPassword: currentPass, newPassword: newPass })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showStatus("Password updated successfully!", "success");
+                    document.getElementById('current-pass').value = '';
+                    document.getElementById('new-pass').value = '';
+                } else {
+                    showStatus(data.message || "Failed to update password", "error");
+                }
+            } catch (err) {
+                showStatus("Connection error", "error");
+            }
+        }
+
+        function showStatus(msg, type) {
+            const status = document.getElementById('password-status');
+            status.innerText = msg;
+            status.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'bg-red-500/10', 'text-red-400');
+            if (type === 'success') {
+                status.classList.add('bg-emerald-500/10', 'text-emerald-400');
+            } else {
+                status.classList.add('bg-red-500/10', 'text-red-400');
+            }
+            setTimeout(() => status.classList.add('hidden'), 5000);
         }
 
         loadDashboard();

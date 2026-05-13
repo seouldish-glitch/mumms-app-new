@@ -113,6 +113,37 @@
                 </div>
             </div>
 
+            <!-- Event Feeds -->
+            <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Upcoming Operations -->
+                <section class="glass p-8 space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="radio" class="text-primary w-5 h-5 animate-pulse"></i>
+                            <h3 class="text-xl font-bold">Upcoming Operations</h3>
+                        </div>
+                        <span id="upcoming-count" class="text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full uppercase tracking-widest">0</span>
+                    </div>
+                    <div id="upcoming-list" class="space-y-3">
+                        <!-- Upcoming items -->
+                    </div>
+                </section>
+
+                <!-- Past Missions -->
+                <section class="glass p-8 space-y-6 opacity-80">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="archive" class="text-slate-500 w-5 h-5"></i>
+                            <h3 class="text-xl font-bold text-slate-300">Past Missions</h3>
+                        </div>
+                        <span id="past-count" class="text-[10px] font-bold bg-white/5 text-slate-500 border border-white/10 px-2 py-0.5 rounded-full uppercase tracking-widest">0</span>
+                    </div>
+                    <div id="past-list" class="space-y-3">
+                        <!-- Past items -->
+                    </div>
+                </section>
+            </div>
+
             <!-- Right: Event Operations (Admin only) -->
             <div id="duty-form-container" class="hidden space-y-8">
                 <section class="glass p-8 space-y-6">
@@ -247,6 +278,54 @@
                 dayEl.onclick = () => showDateInfo(dateStr, events.filter(e => e.date === dateStr));
                 grid.appendChild(dayEl);
             }
+
+            // Populate Event Feeds
+            const today = new Date().toISOString().split('T')[0];
+            const upcomingList = document.getElementById('upcoming-list');
+            const pastList = document.getElementById('past-list');
+            const upcomingCount = document.getElementById('upcoming-count');
+            const pastCount = document.getElementById('past-count');
+
+            const upcoming = events.filter(e => e.date >= today).sort((a,b) => a.date.localeCompare(b.date));
+            const past = events.filter(e => e.date < today).sort((a,b) => b.date.localeCompare(a.date));
+
+            upcomingCount.innerText = upcoming.length;
+            pastCount.innerText = past.length;
+
+            renderEventList(upcomingList, upcoming, true);
+            renderEventList(pastList, past, false);
+            
+            lucide.createIcons();
+        }
+
+        function renderEventList(container, list, isUpcoming) {
+            container.innerHTML = '';
+            if (list.length === 0) {
+                container.innerHTML = `<p class="text-center py-10 text-slate-500 text-sm italic">No missions found.</p>`;
+                return;
+            }
+
+            list.forEach(ev => {
+                const item = document.createElement('div');
+                item.className = `glass glass-hover p-4 border border-white/5 group relative overflow-hidden cursor-pointer`;
+                item.onclick = () => showDateInfo(ev.date, [ev]);
+                item.innerHTML = `
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div>
+                            <h4 class="text-sm font-bold text-white group-hover:text-primary transition-colors">${ev.title}</h4>
+                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">${ev.venue}</p>
+                        </div>
+                        <span class="text-[10px] font-mono font-bold text-slate-500">${ev.date}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 relative z-10">
+                        <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest ${
+                            ev.status === 'Completed' ? 'bg-blue-500/10 text-blue-400' : 'bg-primary/10 text-primary'
+                        }">${ev.status}</span>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
             
             updateTimeline(events);
         }
