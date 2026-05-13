@@ -280,6 +280,10 @@
                 </div>
             </div>
             <p class="text-center text-slate-500 text-sm italic">Align the equipment QR code within the frame.</p>
+            <button id="admin-capture-btn" onclick="captureFrame()" class="hidden w-full glass border border-primary/40 text-primary hover:bg-primary/10 py-4 flex items-center justify-center gap-3 transition-all font-bold rounded-2xl">
+                <i data-lucide="camera" class="w-5 h-5"></i>
+                <span class="text-xs uppercase font-bold tracking-widest">Capture QR Now</span>
+            </button>
         </div>
     </div>
 
@@ -310,6 +314,7 @@
 
         function openScanner() {
             document.getElementById('scanner-modal').classList.remove('hidden');
+            document.getElementById('admin-capture-btn').classList.remove('hidden');
             html5QrCode = new Html5Qrcode("reader");
             const config = { fps: 15, qrbox: { width: 250, height: 250 } };
 
@@ -328,6 +333,27 @@
                 alert("Camera error: " + err);
                 closeScanner();
             });
+        }
+
+        function captureFrame() {
+            const video = document.querySelector('#reader video');
+            if (!video) { alert('Camera not active. Please wait for camera to start.'); return; }
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(function(blob) {
+                const file = new File([blob], 'qr.png', { type: 'image/png' });
+                Html5Qrcode.scanFile(file, false)
+                    .then(result => {
+                        if (navigator.vibrate) navigator.vibrate(100);
+                        document.getElementById('item-lookup-id').value = result;
+                        closeScanner();
+                        showModal('Scan Successful', 'The QR code has been captured and validated correctly.', 'check-circle');
+                        trackItem();
+                    })
+                    .catch(() => { showToast('No QR found — hold steady & try again', 'alert-circle', 'error'); });
+            }, 'image/png');
         }
 
         function closeScanner() {
