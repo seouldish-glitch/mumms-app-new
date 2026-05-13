@@ -376,13 +376,20 @@
             document.getElementById('stop-btn').classList.remove('hidden');
             document.getElementById('scanner-placeholder').classList.add('hidden');
 
-            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode = new Html5Qrcode("reader", { 
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+            });
             const config = { 
-                fps: 25, 
+                fps: 60, 
                 qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.777778,
+                disableFlip: true,
                 videoConstraints: {
                     facingMode: "environment",
-                    focusMode: "continuous"
+                    focusMode: "continuous",
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 }
                 }
             };
 
