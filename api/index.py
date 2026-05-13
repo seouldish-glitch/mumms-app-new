@@ -131,7 +131,12 @@ def error_404(e):
     except:
         return f"Error: 404 - Signal Lost. Coordinate not found in the grid.", 404
 
-@app.route('/sitemap.xml')
+@app.route('/404')
+def not_found_page():
+    try:
+        return get_asset('404.html'), 404
+    except:
+        return f"Error: 404 - Signal Lost. Coordinate not found in the grid.", 404
 def sitemap():
     static_pages = ['home.html', 'team.html', 'calendar.html', 'attendance.html', 'inventory.html', 'dispatch.html', 'login.html', 'admin.html']
     import datetime
