@@ -278,6 +278,7 @@ def verify_captcha(response_token):
         return False
 
 @app.route('/api/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.json
     if not data:
