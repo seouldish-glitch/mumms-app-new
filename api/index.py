@@ -740,4 +740,5 @@ def track_equipment():
         return jsonify({"success": False, "message": str(e)}), 500
 
 if __name__ == '__main__':
+    # Deployment Marker: 2026-05-13-17-01
     app.run(debug=True)
