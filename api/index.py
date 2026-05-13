@@ -226,14 +226,22 @@ def get_collection(collection_name):
 RECAPTCHA_SECRET = os.environ.get("RECAPTCHA_SECRET") or "6LfouucsAAAAAFcK65IiyszNzaxIRNyLl3vp4RFO"
 
 def verify_captcha(response_token):
+    if not response_token:
+        print("reCAPTCHA Verification Error: No response token provided")
+        return False
     try:
         data = urllib.parse.urlencode({
             'secret': RECAPTCHA_SECRET,
             'response': response_token
         }).encode('utf-8')
-        req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
+        req = urllib.request.Request(
+            'https://www.google.com/recaptcha/api/siteverify', 
+            data=data,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'}
+        )
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode())
+            print(f"reCAPTCHA Verification Result: {result}")
             return result.get('success', False)
     except Exception as e:
         print(f"reCAPTCHA Verification Error: {e}")

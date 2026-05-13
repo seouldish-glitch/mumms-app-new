@@ -137,11 +137,16 @@
     </div>
 
     <div class="mobile-brand-header">
-        <img src="/media-logo.png" alt="MUMMS" class="w-12 h-12 rounded-2xl border border-primary/20 object-cover">
-        <div>
-            <h1 class="text-white font-bold text-lg tracking-tight">MUMMS</h1>
-            <p class="text-primary text-[10px] uppercase font-bold tracking-[0.2em]">St. Benedict's Media</p>
+        <div class="flex items-center gap-3">
+            <img src="/media-logo.png" alt="MUMMS" class="w-10 h-10 rounded-xl border border-primary/20 object-cover">
+            <div>
+                <h1 class="text-white font-bold text-base tracking-tight">MUMMS</h1>
+                <p class="text-primary text-[9px] uppercase font-bold tracking-[0.15em]">St. Benedict's Media</p>
+            </div>
         </div>
+        <button onclick="logout()" class="btn-logout-mobile" title="Logout">
+            <i data-lucide="log-out" class="w-5 h-5"></i>
+        </button>
     </div>
 
     <main class="container space-y-8">
@@ -311,6 +316,7 @@
 
             if (user.role === 'MIC' || user.role === 'President') {
                 document.getElementById('admin-nav').classList.remove('hidden');
+                document.getElementById('mobile-admin-nav').classList.remove('hidden');
             }
         }
 
@@ -572,6 +578,10 @@
             <a href="/dispatch" class="mobile-nav-item active">
                 <i data-lucide="zap" class="mnav-icon"></i>
                 <span class="mnav-label">Dispatch</span>
+            </a>
+            <a href="/admin" id="mobile-admin-nav" class="mobile-nav-item hidden">
+                <i data-lucide="shield-check" class="mnav-icon"></i>
+                <span class="mnav-label">Admin</span>
             </a>
         </div>
     </nav>

@@ -104,6 +104,26 @@ body {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
+.btn-logout-mobile {
+    display: none;
+    padding: 0.75rem;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 1rem;
+    color: #f87171;
+    transition: all 0.2s;
+}
+
+.btn-logout-mobile:active {
+    background: rgba(239, 68, 68, 0.2);
+    transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+    .btn-logout-mobile { display: flex; }
+    .mobile-brand-header { display: flex; justify-content: space-between; align-items: center; }
+}
+
 .nav-links {
     display: flex;
     gap: 0.25rem;
