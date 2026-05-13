@@ -515,9 +515,7 @@ def mark_attendance():
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
     try:
-        # Get server time (adjusting for local if needed, but using UTC for consistency)
-        # However, for 3 AM check, we should consider the target region's time.
-        # Assuming UTC+5:30 (Sri Lanka)
+
         from datetime import timedelta
         server_ts = datetime.now(timezone.utc)
         local_ts = server_ts + timedelta(hours=5, minutes=30)
@@ -528,7 +526,6 @@ def mark_attendance():
         active_event = last_log.get('event_title') if is_active else None
 
         if action_type == 'check_in':
-            # Verify event date and time
             events_coll = get_collection("events")
             event = events_coll.find_one({"title": event_title})
             if event:
