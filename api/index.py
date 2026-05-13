@@ -340,7 +340,6 @@ def get_all_equipment():
 @app.route('/api/users', methods=['GET'])
 @token_required
 def get_users():
-    # All authenticated users can view the team
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
@@ -544,7 +543,6 @@ def mark_attendance():
                         "message": "Check-in for this event only opens after 3:00 AM on the event day."
                     }), 403
 
-            # Check if user already checked out of THIS specific event
             already_done = collection.find_one({
                 "email": email, 
                 "event_title": event_title, 
@@ -585,13 +583,11 @@ def get_attendance_status():
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
     try:
-        # Check for active session
         logs = list(collection.find({"email": target_email}).sort("timestamp", -1).limit(1))
         last_log = logs[0] if logs else None
         is_checked_in = last_log is not None and last_log.get('type') == 'check_in'
         active_event = last_log.get('event_title') if is_checked_in else None
         
-        # Check if a specific event is completed
         is_completed = False
         if event_title:
             done_log = collection.find_one({
@@ -662,7 +658,6 @@ def dispatch_item():
         if equip_coll is None:
             return jsonify({"success": False, "message": "Database connection error"}), 500
             
-        # Check current item status
         item = equip_coll.find_one({"customId": custom_id})
         if not item:
             return jsonify({"success": False, "message": "Item not found"}), 404
@@ -745,5 +740,4 @@ def track_equipment():
         return jsonify({"success": False, "message": str(e)}), 500
 
 if __name__ == '__main__':
-    # Deployment Marker: 2026-05-13-16-10-Force-Rebuild
     app.run(debug=True)

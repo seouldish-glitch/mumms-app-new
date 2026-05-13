@@ -321,17 +321,19 @@
         function openScanner() {
             document.getElementById('scanner-modal').classList.remove('hidden');
             html5QrCode = new Html5Qrcode("reader", { 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
             });
             const config = { 
-                fps: 30, 
-                qrbox: { width: 220, height: 220 },
-                aspectRatio: 1.0,
+                fps: 60, 
+                qrbox: { width: 250, height: 250 },
+                aspectRatio: 1.777778,
+                disableFlip: true,
                 videoConstraints: {
                     facingMode: "environment",
                     focusMode: "continuous",
-                    width: { ideal: 640 },
-                    height: { ideal: 640 }
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 }
                 }
             };
             
