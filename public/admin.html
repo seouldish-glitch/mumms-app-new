@@ -320,20 +320,13 @@
 
         function openScanner() {
             document.getElementById('scanner-modal').classList.remove('hidden');
-            html5QrCode = new Html5Qrcode("reader", { 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
-            });
+            html5QrCode = new Html5Qrcode("reader");
             const config = { 
-                fps: 60, 
+                fps: 25, 
                 qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.777778,
-                disableFlip: true,
                 videoConstraints: {
                     facingMode: "environment",
-                    focusMode: "continuous",
-                    width: { min: 640, ideal: 1280, max: 1920 },
-                    height: { min: 480, ideal: 720, max: 1080 }
+                    focusMode: "continuous"
                 }
             };
             
