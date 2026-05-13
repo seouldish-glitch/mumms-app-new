@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         body { padding-bottom: 0 !important; }
 
@@ -139,6 +140,11 @@
                         </div>
                     </div>
 
+                    <!-- reCAPTCHA Widget -->
+                    <div class="flex justify-center py-2">
+                        <div class="g-recaptcha" data-sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" data-theme="dark"></div>
+                    </div>
+
                     <button type="submit" id="login-btn"
                             class="btn-primary w-full py-4 text-sm uppercase tracking-widest font-bold mt-2 gap-2">
                         <span id="btn-text">Sign In</span>
@@ -199,9 +205,15 @@
 
             const email    = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const captcha = grecaptcha.getResponse();
 
             if (!email || !password) {
                 showError('Please enter your email and password.');
+                return;
+            }
+
+            if (!captcha) {
+                showError("Please verify that you are human.");
                 return;
             }
 
@@ -216,10 +228,10 @@
             lucide.createIcons();
 
             try {
-                const res  = await fetch('/api/login', {
+                const res  = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password, captcha })
                 });
                 const data = await res.json();
 

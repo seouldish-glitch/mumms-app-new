@@ -4,6 +4,8 @@ import hmac
 import hashlib
 import base64
 import json
+import urllib.request
+import urllib.parse
 from flask import Flask, request, jsonify, redirect, url_for, make_response, send_from_directory
 from pymongo import MongoClient
 from functools import wraps
@@ -257,6 +259,23 @@ def get_collection(collection_name):
     except Exception as e:
         print(f"DB Collection Access Error ({collection_name}): {e}")
         return None
+        
+RECAPTCHA_SECRET = os.environ.get("RECAPTCHA_SECRET") or "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+
+def verify_captcha(response_token):
+    try:
+        data = urllib.parse.urlencode({
+            'secret': RECAPTCHA_SECRET,
+            'response': response_token
+        }).encode('utf-8')
+        
+        req = urllib.request.Request('https://www.google.com/recaptcha/api/siteverify', data=data)
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode())
+            return result.get('success', False)
+    except Exception as e:
+        print(f"reCAPTCHA Verification Error: {e}")
+        return False
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -266,9 +285,13 @@ def login():
         
     email = data.get('email')
     password = data.get('password')
+    captcha = data.get('captcha')
     
-    if not email or not password:
-        return jsonify({"success": False, "message": "Missing email or password"}), 400
+    if not email or not password or not captcha:
+        return jsonify({"success": False, "message": "Missing credentials or captcha"}), 400
+        
+    if not verify_captcha(captcha):
+        return jsonify({"success": False, "message": "reCAPTCHA verification failed"}), 401
         
     collection = get_collection("users")
     if collection is None:
