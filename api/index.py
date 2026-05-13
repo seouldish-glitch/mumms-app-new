@@ -55,8 +55,20 @@ def debug_dir():
     })
 
 def is_authenticated():
+    # Check cookie
     token = request.cookies.get('auth_token')
-    return verify_token(token) is not None
+    if token and verify_token(token):
+        return True
+        
+    # Check Authorization header
+    if 'Authorization' in request.headers:
+        auth_header = request.headers['Authorization']
+        if auth_header.startswith('Bearer '):
+            token = auth_header.split(" ")[1]
+            if verify_token(token):
+                return True
+                
+    return False
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -749,6 +761,10 @@ def track_equipment():
         return jsonify({"success": False, "message": "Permission denied"}), 403
         
     try:
+        custom_id = request.args.get('id')
+        if not custom_id:
+            return jsonify({"success": False, "message": "ID parameter required"}), 400
+            
         equip_coll = get_collection("equipment")
         item = equip_coll.find_one({"customId": custom_id}, {"_id": 0})
         
