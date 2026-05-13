@@ -218,7 +218,7 @@ def get_collection(collection_name):
         print(f"DB Collection Access Error ({collection_name}): {e}")
         return None
         
-RECAPTCHA_SECRET = os.environ.get("RECAPTCHA_SECRET") or "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+RECAPTCHA_SECRET = os.environ.get("RECAPTCHA_SECRET") or "6LeluOcsAAAAAHpmhX9jU8cV5BmDxrKGzj41y8Qi"
 
 def verify_captcha(response_token):
     try:
