@@ -376,40 +376,31 @@
             document.getElementById('stop-btn').classList.remove('hidden');
             document.getElementById('scanner-placeholder').classList.add('hidden');
 
-            html5QrCode = new Html5Qrcode("reader", { 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-            });
+            html5QrCode = new Html5Qrcode("reader");
+            const cameraConstraint = {
+                facingMode: { ideal: "environment" }
+            };
             const config = { 
-                fps: 60, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.777778,
-                disableFlip: true,
-                videoConstraints: {
-                    facingMode: "environment",
-                    focusMode: "continuous",
-                    width: { min: 640, ideal: 1280, max: 1920 },
-                    height: { min: 480, ideal: 720, max: 1080 }
-                }
+                fps: 15, 
+                qrbox: { width: 250, height: 250 }
             };
 
             html5QrCode.start(
-                { facingMode: "environment" }, 
+                cameraConstraint, 
                 config, 
                 (text) => {
                     if (navigator.vibrate) navigator.vibrate(100);
                     document.getElementById('equipment-id').value = text;
                     stopScanner();
-
                     showModal("Scan Successful", "The QR code has been captured and validated correctly.", "check-circle");
-
                     document.getElementById('dispatch-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     const input = document.getElementById('equipment-id');
                     input.classList.add('border-primary', 'bg-primary/5');
                     setTimeout(() => input.classList.remove('border-primary', 'bg-primary/5'), 2000);
                 },
                 (err) => {}
-            ).catch(() => {
-                showToast("Hardware Error", "camera", "error");
+            ).catch((err) => {
+                showToast("Camera Error: " + err, "camera", "error");
                 stopScanner();
             });
         }
