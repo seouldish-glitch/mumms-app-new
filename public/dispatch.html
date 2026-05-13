@@ -177,7 +177,7 @@
                     </div>
 
                     <div class="relative bg-black/40 rounded-3xl overflow-hidden aspect-square border border-white/5 shadow-2xl">
-                        <div id="reader" class="w-full h-full"></div>
+                        <div id="reader" style="width:100%; min-height:280px;"></div>
                         <div class="absolute inset-8 border border-primary/20 rounded-2xl pointer-events-none">
                             <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary"></div>
                             <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary"></div>
@@ -377,17 +377,11 @@
             document.getElementById('scanner-placeholder').classList.add('hidden');
 
             html5QrCode = new Html5Qrcode("reader");
-            const cameraConstraint = {
-                facingMode: { ideal: "environment" }
-            };
-            const config = { 
-                fps: 15, 
-                qrbox: { width: 250, height: 250 }
-            };
+            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
 
             html5QrCode.start(
-                cameraConstraint, 
-                config, 
+                { facingMode: "environment" },
+                config,
                 (text) => {
                     if (navigator.vibrate) navigator.vibrate(100);
                     document.getElementById('equipment-id').value = text;
@@ -395,12 +389,12 @@
                     showModal("Scan Successful", "The QR code has been captured and validated correctly.", "check-circle");
                     document.getElementById('dispatch-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
                     const input = document.getElementById('equipment-id');
-                    input.classList.add('border-primary', 'bg-primary/5');
-                    setTimeout(() => input.classList.remove('border-primary', 'bg-primary/5'), 2000);
+                    input.classList.add('border-primary');
+                    setTimeout(() => input.classList.remove('border-primary'), 2000);
                 },
                 (err) => {}
             ).catch((err) => {
-                showToast("Camera Error: " + err, "camera", "error");
+                alert("Camera error: " + err);
                 stopScanner();
             });
         }

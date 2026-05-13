@@ -271,7 +271,7 @@
                 </button>
             </div>
             <div class="relative bg-black/40 rounded-3xl overflow-hidden aspect-square border border-white/5">
-                <div id="reader" class="w-full h-full"></div>
+                <div id="reader" style="width:100%; min-height:280px;"></div>
                 <div class="absolute inset-12 border border-primary/20 rounded-2xl pointer-events-none">
                     <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary"></div>
                     <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary"></div>
@@ -311,17 +311,11 @@
         function openScanner() {
             document.getElementById('scanner-modal').classList.remove('hidden');
             html5QrCode = new Html5Qrcode("reader");
-            const cameraConstraint = {
-                facingMode: { ideal: "environment" }
-            };
-            const config = { 
-                fps: 15, 
-                qrbox: { width: 250, height: 250 }
-            };
+            const config = { fps: 15, qrbox: { width: 250, height: 250 } };
 
             html5QrCode.start(
-                cameraConstraint, 
-                config, 
+                { facingMode: "environment" },
+                config,
                 (text) => {
                     if (navigator.vibrate) navigator.vibrate(100);
                     document.getElementById('item-lookup-id').value = text;
