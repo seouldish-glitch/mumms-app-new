@@ -232,7 +232,7 @@
         if (!user) {
             window.location.href = '/login';
         } else {
-            document.getElementById('profile-name').innerText = user.displayName ? user.displayName.split(' ')[0] : 'Member';
+            document.getElementById('profile-name').innerText = user.displayName ? user.displayName.split(' ').slice(0, 2).join(' ') : 'Member';
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
             document.getElementById('current-user-role').innerText = user.role || 'Member';
             
