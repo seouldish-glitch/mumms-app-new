@@ -291,7 +291,7 @@ def change_password():
     try:
         user = collection.find_one({"email": email, "password": current_password})
         if not user:
-            return jsonify({"success": False, "message": "Incorrect current password"}), 401
+            return jsonify({"success": False, "message": "Incorrect current password"}), 400
         collection.update_one({"email": email}, {"$set": {"password": new_password}})
         return jsonify({"success": True, "message": "Password updated successfully"}), 200
     except Exception as e:
