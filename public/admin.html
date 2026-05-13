@@ -334,7 +334,7 @@
         async function loadGlobalDispatch() {
             try {
                 const res = await fetch('/api/dispatch', {
-                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const data = await res.json();
                 const list = document.getElementById('global-dispatch-list');
@@ -361,7 +361,7 @@
 
                 // Load Active Items
                 const activeRes = await fetch('/api/admin/equipment/active', {
-                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const activeData = await activeRes.json();
                 const activeList = document.getElementById('global-active-items');
@@ -395,8 +395,8 @@
             if (!id) return;
 
             try {
-                const res = await fetch(`/api/admin/equipment/tracker?customId=${encodeURIComponent(id)}`, {
-                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                const res = await fetch(`/api/admin/equipment/tracker?id=${encodeURIComponent(id)}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const data = await res.json();
 
@@ -490,7 +490,7 @@
             // Dispatch
             try {
                 const res = await fetch('/api/dispatch', {
-                    headers: { 'X-User-Email': user.email, 'X-User-Password': user.password }
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const data = await res.json();
                 const list = document.getElementById('mbr-dispatch-list');
