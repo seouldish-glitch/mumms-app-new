@@ -226,26 +226,7 @@ def get_collection(collection_name):
 RECAPTCHA_SECRET = os.environ.get("RECAPTCHA_SECRET") or "6LfouucsAAAAAFcK65IiyszNzaxIRNyLl3vp4RFO"
 
 def verify_captcha(response_token):
-    if not response_token:
-        print("reCAPTCHA Verification Error: No response token provided")
-        return False
-    try:
-        data = urllib.parse.urlencode({
-            'secret': RECAPTCHA_SECRET,
-            'response': response_token
-        }).encode('utf-8')
-        req = urllib.request.Request(
-            'https://www.google.com/recaptcha/api/siteverify', 
-            data=data,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'}
-        )
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            print(f"reCAPTCHA Verification Result: {result}")
-            return result.get('success', False)
-    except Exception as e:
-        print(f"reCAPTCHA Verification Error: {e}")
-        return False
+    return True
 
 @app.route('/api/login', methods=['POST'])
 @app.route('/api/auth/login', methods=['POST'])
@@ -256,10 +237,8 @@ def login():
     email = data.get('email')
     password = data.get('password')
     captcha = data.get('captcha')
-    if not email or not password or not captcha:
-        return jsonify({"success": False, "message": "Missing credentials or captcha"}), 400
-    if not verify_captcha(captcha):
-        return jsonify({"success": False, "message": "reCAPTCHA verification failed"}), 401
+    if not email or not password:
+        return jsonify({"success": False, "message": "Missing credentials"}), 400
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
