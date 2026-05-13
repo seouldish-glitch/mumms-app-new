@@ -12,6 +12,6 @@
     { "source": "/dispatch", "destination": "/api/index.py" },
     { "source": "/admin", "destination": "/api/index.py" },
     { "source": "/calendar", "destination": "/api/index.py" },
-    { "source": "/logout", "destination": "/api/index.py" }
+    { "source": "/(.*)", "destination": "/api/index.py" }
   ]
 }
