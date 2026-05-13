@@ -155,7 +155,8 @@
             if (user.role === 'MIC' || user.role === 'President') {
                 document.getElementById('admin-nav').classList.remove('hidden');
                 document.getElementById('register-panel').classList.remove('hidden');
-                document.getElementById('mobile-admin-nav').classList.remove('hidden');
+                const mnav = document.getElementById('mobile-admin-nav');
+                if (mnav) mnav.classList.remove('hidden');
             }
         }
 
