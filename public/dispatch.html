@@ -51,26 +51,9 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
-        .neural-pulse {
-            position: absolute;
-            inset: 30px;
-            background: var(--primary);
-            border-radius: 50%;
-            filter: blur(10px);
-            animation: neural-glow 2s ease-in-out infinite;
-        }
         @keyframes neural-glow {
             0%, 100% { opacity: 0.3; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.5); }
-        }
-        .mobile-brand-header {
-            display: none;
-            padding: 1.5rem;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        @media (max-width: 768px) {
-            .mobile-brand-header { display: flex; }
         }
         .toast-status {
             position: fixed;
@@ -89,8 +72,22 @@
             align-items: center;
             gap: 0.75rem;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            backdrop-filter: blur(12px);
         }
         .toast-status.show { transform: translateX(-50%) translateY(0); }
+        
+        .mobile-brand-header {
+            display: none;
+            padding: 1.5rem;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        @media (max-width: 768px) {
+            .mobile-brand-header { display: flex; }
+        }
     </style>
 </head>
 <body class="animate-fade">
@@ -193,15 +190,15 @@
                     </div>
 
                     <div class="grid grid-cols-3 gap-3">
-                        <button id="start-btn" onclick="startScanner()" class="btn-primary py-4 flex items-center justify-center gap-2">
+                        <button id="start-btn" type="button" onclick="startScanner()" class="btn-primary py-4 flex items-center justify-center gap-2">
                             <i data-lucide="play" class="w-4 h-4"></i>
                             <span class="text-[10px] uppercase font-bold tracking-widest">Initialize</span>
                         </button>
-                        <button id="capture-btn" onclick="captureFrame()" class="hidden glass border border-primary/40 text-primary hover:bg-primary/10 py-4 flex items-center justify-center gap-2 transition-all font-bold">
+                        <button id="capture-btn" type="button" onclick="captureFrame()" class="hidden glass border border-primary/40 text-primary hover:bg-primary/10 py-4 flex items-center justify-center gap-2 transition-all font-bold">
                             <i data-lucide="camera" class="w-4 h-4"></i>
                             <span class="text-[10px] uppercase font-bold tracking-widest">Capture</span>
                         </button>
-                        <button id="stop-btn" onclick="stopScanner()" class="hidden glass border-white/10 hover:bg-red-500/10 hover:text-red-400 py-4 flex items-center justify-center gap-2 transition-all">
+                        <button id="stop-btn" type="button" onclick="stopScanner()" class="hidden glass border-white/10 hover:bg-red-500/10 hover:text-red-400 py-4 flex items-center justify-center gap-2 transition-all">
                             <i data-lucide="square" class="w-4 h-4"></i>
                             <span class="text-[10px] uppercase font-bold tracking-widest">Stop</span>
                         </button>
@@ -274,22 +271,6 @@
         </div>
     </main>
 
-    <div id="custom-modal" class="fixed inset-0 z-[200000] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="glass max-w-sm w-full p-8 text-center space-y-6 relative z-10 border-white/10">
-            <div id="modal-icon" class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20">
-                <i data-lucide="check-circle" class="text-primary w-8 h-8"></i>
-            </div>
-            <div class="space-y-2">
-                <h3 id="modal-title" class="text-xl font-bold text-white uppercase tracking-wider">Capture Success</h3>
-                <p id="modal-msg" class="text-slate-400 text-sm leading-relaxed">The QR identifier has been successfully synchronized.</p>
-            </div>
-            <button id="modal-close" class="btn-primary w-full py-4 text-xs font-bold uppercase tracking-widest shadow-lg shadow-primary/20">
-                Acknowledge
-            </button>
-        </div>
-    </div>
-
     <div id="loading-overlay" class="neural-loader">
         <div class="neural-core">
             <div class="neural-ring"></div>
@@ -319,6 +300,11 @@
             </div>
             <button id="modal-close" class="btn-primary w-full py-4 text-[10px] uppercase font-bold tracking-widest">Acknowledge</button>
         </div>
+    </div>
+
+    <div id="toast" class="toast-status bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 glass">
+        <i id="toast-icon" data-lucide="info" class="w-4 h-4"></i>
+        <span id="toast-msg">Success</span>
     </div>
 
     <script>
