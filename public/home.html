@@ -239,7 +239,7 @@
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
-            if (user.role === 'MIC' || user.role === 'President') {
+            if (['MIC', 'President', 'Web Developer'].includes(user.role)) {
                 document.getElementById('admin-nav').classList.remove('hidden');
                 const mnav = document.getElementById('mobile-admin-nav');
                 if (mnav) mnav.classList.remove('hidden');

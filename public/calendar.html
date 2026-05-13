@@ -257,7 +257,7 @@
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
-            if (user.role === 'MIC' || user.role === 'President') {
+            if (['MIC', 'President', 'Web Developer'].includes(user.role)) {
                 document.getElementById('admin-nav').classList.remove('hidden');
                 document.getElementById('duty-form-container').classList.remove('hidden');
                 const mnav = document.getElementById('mobile-admin-nav');
@@ -369,7 +369,7 @@
             if (events.length > 0) {
                 events.sort((a, b) => new Date(a.date) - new Date(b.date)).forEach(ev => {
                     const isAssigned = user && ev.assigned_members && ev.assigned_members.includes(user.displayName);
-                    const isAdmin = user && (user.role === 'MIC' || user.role === 'President');
+                    const isAdmin = user && ['MIC', 'President', 'Web Developer'].includes(user.role);
                     
                     const item = document.createElement('div');
                     item.className = `glass glass-hover p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-l-4 ${isAssigned ? 'border-l-primary bg-primary/5' : 'border-l-white/10'}`;

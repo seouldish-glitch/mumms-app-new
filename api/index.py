@@ -441,8 +441,8 @@ def update_event(event_id):
 @app.route('/api/users', methods=['POST'])
 @token_required
 def register_user():
-    if request.user.get('role') not in ('MIC', 'President'):
-        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can manage members."}), 403
+    if request.user.get('role') not in ('MIC', 'President', 'Web Developer'):
+        return jsonify({"success": False, "message": "Permission denied. Only MIC, President, and Web Developer can manage members."}), 403
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
@@ -466,8 +466,8 @@ def register_user():
 @app.route('/api/users/<email>', methods=['DELETE'])
 @token_required
 def delete_user(email):
-    if request.user.get('role') not in ('MIC', 'President'):
-        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can manage members."}), 403
+    if request.user.get('role') not in ('MIC', 'President', 'Web Developer'):
+        return jsonify({"success": False, "message": "Permission denied. Only MIC, President, and Web Developer can manage members."}), 403
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
@@ -483,8 +483,8 @@ def delete_user(email):
 @app.route('/api/users/<email>', methods=['PUT'])
 @token_required
 def update_user_role(email):
-    if request.user.get('role') not in ('MIC', 'President'):
-        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can manage members."}), 403
+    if request.user.get('role') not in ('MIC', 'President', 'Web Developer'):
+        return jsonify({"success": False, "message": "Permission denied. Only MIC, President, and Web Developer can manage members."}), 403
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400

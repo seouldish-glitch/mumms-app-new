@@ -159,7 +159,7 @@
             }
 
             // ONLY MIC AND PRESIDENT CAN ADD NEW MEMBERS
-            if (['MIC', 'President'].includes(user.role)) {
+            if (['MIC', 'President', 'Web Developer'].includes(user.role)) {
                 document.getElementById('register-panel').classList.remove('hidden');
             }
         }
@@ -196,7 +196,7 @@
                         
                         const initials = u.displayName ? u.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
                         const isSelf = u.email === user.email;
-                        const canAdmin = user && ['MIC', 'President'].includes(user.role);
+                        const canAdmin = user && ['MIC', 'President', 'Web Developer'].includes(user.role);
 
                         card.innerHTML = `
                             <div class="flex items-start justify-between mb-4">
