@@ -441,8 +441,8 @@ def update_event(event_id):
 @app.route('/api/users', methods=['POST'])
 @token_required
 def register_user():
-    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
-        return jsonify({"success": False, "message": "Permission denied"}), 403
+    if request.user.get('role') not in ('MIC', 'President'):
+        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can manage members."}), 403
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
@@ -466,8 +466,8 @@ def register_user():
 @app.route('/api/users/<email>', methods=['DELETE'])
 @token_required
 def delete_user(email):
-    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
-        return jsonify({"success": False, "message": "Permission denied"}), 403
+    if request.user.get('role') not in ('MIC', 'President'):
+        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can manage members."}), 403
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
@@ -483,8 +483,8 @@ def delete_user(email):
 @app.route('/api/users/<email>', methods=['PUT'])
 @token_required
 def update_user_role(email):
-    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
-        return jsonify({"success": False, "message": "Permission denied"}), 403
+    if request.user.get('role') not in ('MIC', 'President'):
+        return jsonify({"success": False, "message": "Permission denied. Only MIC and President can manage members."}), 403
     data = request.json
     if not data:
         return jsonify({"success": False, "message": "Missing request body"}), 400
@@ -515,12 +515,38 @@ def mark_attendance():
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
     try:
+        # Get server time (adjusting for local if needed, but using UTC for consistency)
+        # However, for 3 AM check, we should consider the target region's time.
+        # Assuming UTC+5:30 (Sri Lanka)
+        from datetime import timedelta
         server_ts = datetime.now(timezone.utc)
+        local_ts = server_ts + timedelta(hours=5, minutes=30)
+        
         logs = list(collection.find({"email": email}).sort("timestamp", -1).limit(1))
         last_log = logs[0] if logs else None
         is_active = last_log is not None and last_log.get('type') == 'check_in'
         active_event = last_log.get('event_title') if is_active else None
+
         if action_type == 'check_in':
+            # Verify event date and time
+            events_coll = get_collection("events")
+            event = events_coll.find_one({"title": event_title})
+            if event:
+                event_date_str = event.get('date') # 'YYYY-MM-DD'
+                current_date_str = local_ts.strftime('%Y-%m-%d')
+                
+                if current_date_str != event_date_str:
+                    return jsonify({
+                        "success": False, 
+                        "message": f"Check-in is only allowed on the day of the event ({event_date_str})."
+                    }), 403
+                    
+                if local_ts.hour < 3:
+                    return jsonify({
+                        "success": False, 
+                        "message": "Check-in for this event only opens after 3:00 AM on the event day."
+                    }), 403
+
             # Check if user already checked out of THIS specific event
             already_done = collection.find_one({
                 "email": email, 
