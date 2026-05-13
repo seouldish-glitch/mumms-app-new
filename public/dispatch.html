@@ -377,8 +377,7 @@
             document.getElementById('scanner-placeholder').classList.add('hidden');
 
             html5QrCode = new Html5Qrcode("reader", { 
-                experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
             });
             const config = { 
                 fps: 60, 
