@@ -198,7 +198,7 @@
         document.getElementById('current-user-role').innerText = user.role || 'Member';
         const initials = (user.displayName || 'U').trim().split(' ').map(n => n[0]).join('').toUpperCase();
         document.getElementById('user-avatar').innerText = initials;
-        if (user.role === 'MIC' || user.role === 'President') {
+        if (['MIC', 'President', 'Vice President', 'Web Developer'].includes(user.role)) {
             document.getElementById('admin-nav').classList.remove('hidden');
             const mnav = document.getElementById('mobile-admin-nav');
             if (mnav) mnav.classList.remove('hidden');

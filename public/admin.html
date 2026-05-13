@@ -308,7 +308,9 @@
 
         // Check login
         const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || (user.role !== 'MIC' && user.role !== 'President')) {
+        const isAdmin = user && ['MIC', 'President', 'Vice President', 'Web Developer'].includes(user.role);
+        
+        if (!user || !isAdmin) {
             window.location.href = '/home';
         } else {
             document.getElementById('current-user-name').innerText = user.displayName || 'User';
@@ -316,7 +318,7 @@
             
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
-            if (user.role === 'MIC' || user.role === 'President') {
+            if (isAdmin) {
                 const mnav = document.getElementById('mobile-admin-nav');
                 if (mnav) mnav.classList.remove('hidden');
             }
@@ -534,6 +536,8 @@
             } catch (err) {}
         }
 
+        loadUsers();
+        loadGlobalDispatch();
     </script>
 
     <!-- Mobile Bottom Navigation -->

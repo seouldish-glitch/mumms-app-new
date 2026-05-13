@@ -152,7 +152,7 @@
             const initials = user.displayName ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
             document.getElementById('user-avatar').innerText = initials;
 
-            if (user.role === 'MIC' || user.role === 'President') {
+            if (['MIC', 'President', 'Vice President', 'Web Developer'].includes(user.role)) {
                 document.getElementById('admin-nav').classList.remove('hidden');
                 document.getElementById('register-panel').classList.remove('hidden');
                 const mnav = document.getElementById('mobile-admin-nav');
@@ -192,7 +192,7 @@
                         
                         const initials = u.displayName ? u.displayName.split(' ').map(n => n[0]).join('').toUpperCase() : 'U';
                         const isSelf = u.email === user.email;
-                        const canAdmin = user && (user.role === 'MIC' || user.role === 'President');
+                        const canAdmin = user && ['MIC', 'President', 'Vice President', 'Web Developer'].includes(user.role);
 
                         card.innerHTML = `
                             <div class="flex items-start justify-between mb-4">

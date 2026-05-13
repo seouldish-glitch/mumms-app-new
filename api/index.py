@@ -98,7 +98,7 @@ def serve_any(path):
         if not is_authenticated():
             return redirect('/login')
         role = request.cookies.get('user_role')
-        if role not in ['MIC', 'President']:
+        if role not in ['MIC', 'President', 'Vice President', 'Web Developer']:
             return redirect('/home')
         return get_asset('admin.html')
 
@@ -340,8 +340,7 @@ def get_all_equipment():
 @app.route('/api/users', methods=['GET'])
 @token_required
 def get_users():
-    if request.user.get('role') not in ('MIC', 'President'):
-        return jsonify({"success": False, "message": "Permission denied"}), 403
+    # All authenticated users can view the team
     collection = get_collection("users")
     if collection is None:
         return jsonify({"success": False, "message": "Database connection error"}), 500
@@ -369,7 +368,7 @@ def get_events():
 @app.route('/api/events', methods=['POST'])
 @token_required
 def create_event():
-    if request.user.get('role') not in ('MIC', 'President'):
+    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     data = request.json
     if not data:
@@ -395,7 +394,7 @@ def create_event():
 @app.route('/api/events/<event_id>', methods=['DELETE'])
 @token_required
 def delete_event(event_id):
-    if request.user.get('role') not in ('MIC', 'President'):
+    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     collection = get_collection("events")
     if collection is None:
@@ -413,7 +412,7 @@ def delete_event(event_id):
 @app.route('/api/events/<event_id>', methods=['PUT'])
 @token_required
 def update_event(event_id):
-    if request.user.get('role') not in ('MIC', 'President'):
+    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     data = request.json
     if not data:
@@ -442,7 +441,7 @@ def update_event(event_id):
 @app.route('/api/users', methods=['POST'])
 @token_required
 def register_user():
-    if request.user.get('role') not in ('MIC', 'President'):
+    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     data = request.json
     if not data:
@@ -467,7 +466,7 @@ def register_user():
 @app.route('/api/users/<email>', methods=['DELETE'])
 @token_required
 def delete_user(email):
-    if request.user.get('role') not in ('MIC', 'President'):
+    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     collection = get_collection("users")
     if collection is None:
@@ -484,7 +483,7 @@ def delete_user(email):
 @app.route('/api/users/<email>', methods=['PUT'])
 @token_required
 def update_user_role(email):
-    if request.user.get('role') not in ('MIC', 'President'):
+    if request.user.get('role') not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         return jsonify({"success": False, "message": "Permission denied"}), 403
     data = request.json
     if not data:
@@ -594,7 +593,7 @@ def get_attendance():
     requester_email = request.user.get('email')
     requester_role = request.user.get('role')
     target_email = request.args.get('email')
-    if requester_role not in ('MIC', 'President'):
+    if requester_role not in ('MIC', 'President', 'Vice President', 'Web Developer'):
         if target_email and target_email != requester_email:
             return jsonify({"success": False, "message": "Permission denied"}), 403
         target_email = requester_email
@@ -614,7 +613,7 @@ def get_attendance():
 @app.route('/api/dispatch', methods=['GET'])
 @token_required
 def get_dispatch():
-    if request.user.get('role') not in ['MIC', 'President']:
+    if request.user.get('role') not in ['MIC', 'President', 'Vice President', 'Web Developer']:
         return jsonify({"success": False, "message": "Permission denied"}), 403
     collection = get_collection("dispatch")
     if collection is None:
@@ -677,7 +676,7 @@ def dispatch_item():
 @app.route('/api/admin/equipment/active', methods=['GET'])
 @token_required
 def get_active_equipment():
-    if request.user.get('role') not in ['MIC', 'President']:
+    if request.user.get('role') not in ['MIC', 'President', 'Vice President', 'Web Developer']:
         return jsonify({"success": False, "message": "Permission denied"}), 403
     equip_coll = get_collection("equipment")
     if equip_coll is None:
@@ -691,7 +690,7 @@ def get_active_equipment():
 @app.route('/api/admin/equipment/tracker', methods=['GET'])
 @token_required
 def track_equipment():
-    if request.user.get('role') not in ['MIC', 'President']:
+    if request.user.get('role') not in ['MIC', 'President', 'Vice President', 'Web Developer']:
         return jsonify({"success": False, "message": "Permission denied"}), 403
     try:
         custom_id = request.args.get('id')
