@@ -12,6 +12,25 @@
         #reader__scan_region { background: transparent !important; }
         #reader__dashboard { display: none !important; }
         video { border-radius: 1.5rem; }
+        .toast-status {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 100000;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .toast-status.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body class="animate-fade">
@@ -273,6 +292,11 @@
         </div>
     </div>
 
+    <div id="toast" class="toast-status bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 glass">
+        <i id="toast-icon" data-lucide="info" class="w-4 h-4"></i>
+        <span id="toast-msg">Success</span>
+    </div>
+
     <script>
         lucide.createIcons();
         let html5QrCode = null;
@@ -293,6 +317,8 @@
                 { facingMode: "environment" }, 
                 config, 
                 (decodedText) => {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    showToast("Code Captured", "check", "success");
                     document.getElementById('item-lookup-id').value = decodedText;
                     closeScanner();
                     trackItem();
@@ -305,12 +331,31 @@
         }
 
         function closeScanner() {
-            document.getElementById('scanner-modal').classList.add('hidden');
-            if (html5QrCode) {
+            if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => {
-                    html5QrCode = null;
-                }).catch(err => console.error(err));
+                    document.getElementById('scanner-modal').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('scanner-modal').classList.add('hidden');
             }
+        }
+
+        function showToast(msg, icon = 'info', type = 'success') {
+            const toast = document.getElementById('toast');
+            const iconEl = document.getElementById('toast-icon');
+            const msgEl = document.getElementById('toast-msg');
+            
+            msgEl.innerText = msg;
+            iconEl.setAttribute('data-lucide', icon);
+            
+            if (type === 'success') {
+                toast.className = 'toast-status bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 glass show';
+            } else {
+                toast.className = 'toast-status bg-red-500/10 text-red-400 border border-red-500/20 glass show';
+            }
+            
+            lucide.createIcons();
+            setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
         // Check login

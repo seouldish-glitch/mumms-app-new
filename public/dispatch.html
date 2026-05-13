@@ -374,6 +374,8 @@
                 { facingMode: "environment" }, 
                 config, 
                 (text) => {
+                    if (navigator.vibrate) navigator.vibrate(100);
+                    showToast("Code Captured", "check", "success");
                     document.getElementById('equipment-id').value = text;
                     stopScanner();
                     document.getElementById('dispatch-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
