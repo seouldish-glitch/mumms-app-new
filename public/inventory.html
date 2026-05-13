@@ -8,10 +8,38 @@
     <link rel="stylesheet" href="/styles.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .mobile-brand-header {
+            display: none;
+            padding: 1.5rem;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        @media (max-width: 768px) {
+            .mobile-brand-header { display: flex; }
+        }
+        .toast-status {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 100000;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .toast-status.show { transform: translateX(-50%) translateY(0); }
+    </style>
 </head>
 <body class="animate-fade">
-
-    <!-- Premium Navigation -->
     <nav class="nav-container">
         <div class="nav-bar">
             <div class="flex items-center gap-3">
@@ -49,9 +77,20 @@
         </div>
     </nav>
 
+    <div id="toast" class="toast-status glass">
+        <i id="toast-icon" data-lucide="info"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <div class="mobile-brand-header">
+        <img src="/media-logo.png" alt="MUMMS" class="w-12 h-12 rounded-2xl border border-primary/20 object-cover">
+        <div>
+            <h1 class="text-white font-bold text-lg tracking-tight">MUMMS</h1>
+            <p class="text-primary text-[10px] uppercase font-bold tracking-[0.2em]">St. Benedict's Media</p>
+        </div>
+    </div>
+
     <main class="container space-y-8">
-        
-        <!-- Header Section -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="space-y-2">
                 <h2 class="text-4xl font-bold text-white tracking-tight">Equipment Inventory</h2>
@@ -66,8 +105,6 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            
-            <!-- Left: Stat Overviews -->
             <div class="lg:col-span-1 space-y-6">
                 <div class="glass p-6 space-y-4">
                     <div class="flex items-center gap-3 mb-2">
@@ -100,7 +137,6 @@
                     </div>
                 </div>
 
-                <!-- Admin Action Card -->
                 <div id="admin-actions" class="hidden glass p-6 border-l-4 border-l-primary space-y-4">
                     <h4 class="text-sm font-bold text-white uppercase tracking-tight">Technical Control</h4>
                     <p class="text-[10px] text-slate-500">Authorized personnel can generate equipment identity markers.</p>
@@ -108,7 +144,6 @@
                 </div>
             </div>
 
-            <!-- Right: Equipment Table -->
             <div class="lg:col-span-3">
                 <section class="glass overflow-hidden">
                     <div class="p-6 border-b border-white/5 flex items-center justify-between">
@@ -131,7 +166,6 @@
                                 </tr>
                             </thead>
                             <tbody id="inventory-list" class="divide-y divide-white/5">
-                                <!-- Loading State -->
                                 <tr>
                                     <td colspan="4" class="px-6 py-20 text-center">
                                         <div class="flex flex-col items-center gap-3">
@@ -148,10 +182,8 @@
         </div>
     </main>
 
-    <!-- Hidden QR Generation Area -->
     <div id="qr-hidden" class="hidden"></div>
 
-    <!-- Modal System -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-bg-dark/80 backdrop-blur-md flex items-center justify-center z-[10000] p-4">
         <div class="glass max-w-md w-full p-8 text-center space-y-6">
             <div id="modal-icon" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto">
@@ -168,7 +200,6 @@
     <script>
         lucide.createIcons();
 
-        // Check login
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
             window.location.href = '/login';
@@ -191,7 +222,6 @@
             window.location.href = '/logout';
         }
 
-        // Equipment Data
         let equipmentData = [];
 
         async function loadEquipment() {
@@ -261,7 +291,6 @@
             }
         }
 
-        // Search Filter
         document.getElementById('search-inventory').addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             const filtered = equipmentData.filter(item => 
@@ -272,7 +301,6 @@
             renderEquipment(filtered);
         });
 
-        // QR Download Logic
         function downloadQR(id, name) {
             const qrContainer = document.getElementById('qr-hidden');
             qrContainer.innerHTML = '';
@@ -295,52 +323,58 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    showModal("Identity Marker Exported", `QR identity for ${name} has been generated and saved.`, "check-circle");
+                    showToast("Marker Exported", "check-circle", "success");
                 }
             }, 200);
         }
 
-        function showModal(title, msg, icon = "info") {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-msg').innerText = msg;
-            document.getElementById('modal-icon').innerHTML = `<i data-lucide="${icon}" class="text-primary w-8 h-8"></i>`;
+        function showToast(msg, icon, type) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+            toastMsg.innerText = msg;
+            toastIcon.setAttribute('data-lucide', icon);
             lucide.createIcons();
-            document.getElementById('custom-modal').classList.remove('hidden');
+            toast.classList.remove('text-emerald-400', 'text-red-400', 'border-emerald-500/20', 'border-red-500/20');
+            if (type === 'success') {
+                toast.classList.add('text-emerald-400', 'border-emerald-500/20');
+            } else {
+                toast.classList.add('text-red-400', 'border-red-500/20');
+            }
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
-        document.getElementById('modal-close').onclick = () => document.getElementById('custom-modal').classList.add('hidden');
 
         loadEquipment();
     </script>
 
-    <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-inner">
-        <a href="/home" class="mobile-nav-item">
-            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
-            <span class="mnav-label">Home</span>
-        </a>
-        <a href="/team" class="mobile-nav-item">
-            <i data-lucide="users" class="mnav-icon"></i>
-            <span class="mnav-label">Team</span>
-        </a>
-        <a href="/calendar" class="mobile-nav-item">
-            <i data-lucide="calendar" class="mnav-icon"></i>
-            <span class="mnav-label">Events</span>
-        </a>
-        <a href="/attendance" class="mobile-nav-item">
-            <i data-lucide="clock" class="mnav-icon"></i>
-            <span class="mnav-label">Attend</span>
-        </a>
-        <a href="/inventory" class="mobile-nav-item active">
-            <i data-lucide="package" class="mnav-icon"></i>
-            <span class="mnav-label">Inventory</span>
-        </a>
-        <a href="/dispatch" class="mobile-nav-item">
-            <i data-lucide="zap" class="mnav-icon"></i>
-            <span class="mnav-label">Dispatch</span>
-        </a>
+            <a href="/home" class="mobile-nav-item">
+                <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+                <span class="mnav-label">Home</span>
+            </a>
+            <a href="/team" class="mobile-nav-item">
+                <i data-lucide="users" class="mnav-icon"></i>
+                <span class="mnav-label">Team</span>
+            </a>
+            <a href="/calendar" class="mobile-nav-item">
+                <i data-lucide="calendar" class="mnav-icon"></i>
+                <span class="mnav-label">Events</span>
+            </a>
+            <a href="/attendance" class="mobile-nav-item">
+                <i data-lucide="clock" class="mnav-icon"></i>
+                <span class="mnav-label">Attend</span>
+            </a>
+            <a href="/inventory" class="mobile-nav-item active">
+                <i data-lucide="package" class="mnav-icon"></i>
+                <span class="mnav-label">Inventory</span>
+            </a>
+            <a href="/dispatch" class="mobile-nav-item">
+                <i data-lucide="zap" class="mnav-icon"></i>
+                <span class="mnav-label">Dispatch</span>
+            </a>
         </div>
     </nav>
 </body>
 </html>
-

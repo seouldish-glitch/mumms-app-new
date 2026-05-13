@@ -12,8 +12,6 @@
         #reader__scan_region { background: transparent !important; }
         #reader__dashboard { display: none !important; }
         video { border-radius: 1.5rem; }
-        
-        /* 2026 Neural Loading Screen */
         .neural-loader {
             position: fixed;
             inset: 0;
@@ -65,11 +63,37 @@
             0%, 100% { opacity: 0.3; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.5); }
         }
+        .mobile-brand-header {
+            display: none;
+            padding: 1.5rem;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        @media (max-width: 768px) {
+            .mobile-brand-header { display: flex; }
+        }
+        .toast-status {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 100000;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.75rem;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .toast-status.show { transform: translateX(-50%) translateY(0); }
     </style>
 </head>
 <body class="animate-fade">
-
-    <!-- Premium Navigation -->
     <nav class="nav-container">
         <div class="nav-bar">
             <div class="flex items-center gap-3">
@@ -107,9 +131,20 @@
         </div>
     </nav>
 
+    <div id="toast" class="toast-status glass">
+        <i id="toast-icon" data-lucide="info"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <div class="mobile-brand-header">
+        <img src="/media-logo.png" alt="MUMMS" class="w-12 h-12 rounded-2xl border border-primary/20 object-cover">
+        <div>
+            <h1 class="text-white font-bold text-lg tracking-tight">MUMMS</h1>
+            <p class="text-primary text-[10px] uppercase font-bold tracking-[0.2em]">St. Benedict's Media</p>
+        </div>
+    </div>
+
     <main class="container space-y-8">
-        
-        <!-- Header Section -->
         <header class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div class="space-y-2">
                 <h2 class="text-4xl font-bold text-white tracking-tight">Security Dispatch</h2>
@@ -122,8 +157,6 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- Left: Scanner Interface -->
             <div class="space-y-6">
                 <section class="glass p-8 space-y-6 relative overflow-hidden group">
                     <div class="absolute inset-0 bg-primary/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
@@ -140,15 +173,12 @@
 
                     <div class="relative bg-black/40 rounded-3xl overflow-hidden aspect-square border border-white/5 shadow-2xl">
                         <div id="reader" class="w-full h-full"></div>
-                        
-                        <!-- HUD Elements -->
                         <div class="absolute inset-8 border border-primary/20 rounded-2xl pointer-events-none">
                             <div class="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-primary"></div>
                             <div class="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-primary"></div>
                             <div class="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-primary"></div>
                             <div class="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-primary"></div>
                         </div>
-                        
                         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" id="scanner-placeholder">
                             <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 mb-4">
                                 <i data-lucide="qr-code" class="text-primary w-10 h-10 animate-pulse"></i>
@@ -170,10 +200,8 @@
                 </section>
             </div>
 
-            <!-- Right: Protocol Form -->
             <div class="space-y-6" id="dispatch-form-section">
                 <section class="glass p-8 space-y-8">
-                    <!-- Workflow Selector -->
                     <div class="flex p-1 bg-white/5 rounded-2xl border border-white/10">
                         <button id="tab-checkout" onclick="setMode('checkout')" class="flex-1 py-3 text-[10px] uppercase font-bold tracking-widest rounded-xl transition-all bg-primary text-black">
                             Mobilization
@@ -192,7 +220,6 @@
                             </div>
                         </div>
 
-                        <!-- Active Assets List (Visible in Return mode) -->
                         <div id="checked-out-list-container" class="hidden space-y-3 animate-fade">
                             <label class="text-[10px] uppercase tracking-widest font-bold text-slate-500 ml-1">Your Active Deployments</label>
                             <div id="checked-out-list" class="glass bg-white/2 p-4 max-h-48 overflow-y-auto space-y-2 border-white/5 scrollbar-thin">
@@ -238,7 +265,6 @@
         </div>
     </main>
 
-    <!-- Global Loading System (2026 Edition) -->
     <div id="loading-overlay" class="neural-loader">
         <div class="neural-core">
             <div class="neural-ring"></div>
@@ -256,11 +282,10 @@
         </div>
     </div>
 
-    <!-- Modal System -->
     <div id="custom-modal" class="hidden fixed inset-0 bg-bg-dark/90 backdrop-blur-xl flex items-center justify-center z-[10000] p-4">
         <div class="glass max-w-md w-full p-10 text-center space-y-8 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent"></div>
-            <div id="modal-icon" class="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center border border-primary/20 mx-auto">
+            <div id="modal-icon" class="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mx-auto">
                 <i data-lucide="shield-check" class="text-primary w-10 h-10"></i>
             </div>
             <div class="space-y-3">
@@ -274,7 +299,6 @@
     <script>
         lucide.createIcons();
 
-        // Check login
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
             window.location.href = '/login';
@@ -302,8 +326,6 @@
         function setMode(newMode) {
             mode = newMode;
             const isCheckout = mode === 'checkout';
-            
-            // UI Updates
             const btn1 = document.getElementById('tab-checkout');
             const btn2 = document.getElementById('tab-return');
             const actionBtn = document.getElementById('action-btn');
@@ -326,7 +348,6 @@
             if (!isCheckout) loadUserEquipment();
         }
 
-        // Scanner Logic
         function startScanner() {
             document.getElementById('start-btn').classList.add('hidden');
             document.getElementById('stop-btn').classList.remove('hidden');
@@ -341,18 +362,14 @@
                 (text) => {
                     document.getElementById('equipment-id').value = text;
                     stopScanner();
-                    
-                    // Auto-scroll to form with smooth transition
                     document.getElementById('dispatch-form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    
-                    // Briefly highlight the input
                     const input = document.getElementById('equipment-id');
                     input.classList.add('border-primary', 'bg-primary/5');
                     setTimeout(() => input.classList.remove('border-primary', 'bg-primary/5'), 2000);
                 },
                 (err) => {}
             ).catch(() => {
-                showModal("Access Denied", "Camera hardware communication failure.", "alert-triangle");
+                showToast("Hardware Error", "camera", "error");
                 stopScanner();
             });
         }
@@ -371,7 +388,6 @@
             }
         }
 
-        // Signature System
         const canvas = document.getElementById('sig-canvas');
         const ctx = canvas.getContext('2d');
         let drawing = false;
@@ -390,13 +406,11 @@
             const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
             const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
             const rect = canvas.getBoundingClientRect();
-            
             ctx.lineWidth = 2.5;
             ctx.lineCap = 'round';
             ctx.strokeStyle = '#00DF82';
             ctx.shadowBlur = 4;
             ctx.shadowColor = '#00DF82';
-
             ctx.lineTo(clientX - rect.left, clientY - rect.top);
             ctx.stroke();
             ctx.beginPath();
@@ -414,14 +428,13 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Protocol Execution
         async function authorizeDispatch() {
             const id = document.getElementById('equipment-id').value;
             const purpose = document.getElementById('purpose').value;
             const isCheckout = mode === 'checkout';
             
             if (!id || (isCheckout && !purpose)) {
-                showModal("Verification Failure", `Complete all required ${isCheckout ? 'identity and objective' : 'identity'} fields.`, "alert-octagon");
+                showToast("Form Incomplete", "alert-circle", "error");
                 return;
             }
             
@@ -445,16 +458,16 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    showModal("Protocol Authorized", `Equipment ${mode === 'checkout' ? 'mobilized' : 'returned'} successfully. Transaction logged.`, "check-circle");
+                    showToast("Protocol Authorized", "check-circle", "success");
                     document.getElementById('equipment-id').value = '';
                     document.getElementById('purpose').value = '';
                     clearSignature();
                     if (mode === 'return') loadUserEquipment();
                 } else {
-                    showModal("Access Denied", data.message || "System rejected the request.", "x-circle");
+                    showToast(data.message, "x-circle", "error");
                 }
             } catch (err) {
-                showModal("Connection Lost", "Failed to reach central server.", "wifi-off");
+                showToast("Network Error", "wifi-off", "error");
             } finally {
                 toggleLoading(false);
             }
@@ -481,14 +494,12 @@
         async function loadUserEquipment() {
             const list = document.getElementById('checked-out-list');
             list.innerHTML = '<div class="text-center py-4 text-[10px] text-slate-500 font-bold uppercase italic">Querying Data...</div>';
-            
             try {
                 const res = await fetch(`/api/equipment?current_user=${encodeURIComponent(user.displayName)}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
                 });
                 const data = await res.json();
                 list.innerHTML = '';
-                
                 if (data.success && data.equipment.length > 0) {
                     data.equipment.forEach(item => {
                         const div = document.createElement('div');
@@ -516,47 +527,53 @@
             overlay.style.display = show ? 'flex' : 'none';
         }
 
-        function showModal(title, msg, icon = "info") {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-msg').innerText = msg;
-            document.getElementById('modal-icon').innerHTML = `<i data-lucide="${icon}" class="text-primary w-10 h-10"></i>`;
+        function showToast(msg, icon, type) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+            toastMsg.innerText = msg;
+            toastIcon.setAttribute('data-lucide', icon);
             lucide.createIcons();
-            document.getElementById('custom-modal').classList.remove('hidden');
+            toast.classList.remove('text-emerald-400', 'text-red-400', 'border-emerald-500/20', 'border-red-500/20');
+            if (type === 'success') {
+                toast.classList.add('text-emerald-400', 'border-emerald-500/20');
+            } else {
+                toast.classList.add('text-red-400', 'border-red-500/20');
+            }
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
         }
-        document.getElementById('modal-close').onclick = () => document.getElementById('custom-modal').classList.add('hidden');
 
         loadEvents();
     </script>
 
-    <!-- Mobile Bottom Navigation -->
     <nav class="mobile-nav" aria-label="Mobile navigation">
         <div class="mobile-nav-inner">
-        <a href="/home" class="mobile-nav-item">
-            <i data-lucide="layout-dashboard" class="mnav-icon"></i>
-            <span class="mnav-label">Home</span>
-        </a>
-        <a href="/team" class="mobile-nav-item">
-            <i data-lucide="users" class="mnav-icon"></i>
-            <span class="mnav-label">Team</span>
-        </a>
-        <a href="/calendar" class="mobile-nav-item">
-            <i data-lucide="calendar" class="mnav-icon"></i>
-            <span class="mnav-label">Events</span>
-        </a>
-        <a href="/attendance" class="mobile-nav-item">
-            <i data-lucide="clock" class="mnav-icon"></i>
-            <span class="mnav-label">Attend</span>
-        </a>
-        <a href="/inventory" class="mobile-nav-item">
-            <i data-lucide="package" class="mnav-icon"></i>
-            <span class="mnav-label">Inventory</span>
-        </a>
-        <a href="/dispatch" class="mobile-nav-item active">
-            <i data-lucide="zap" class="mnav-icon"></i>
-            <span class="mnav-label">Dispatch</span>
-        </a>
+            <a href="/home" class="mobile-nav-item">
+                <i data-lucide="layout-dashboard" class="mnav-icon"></i>
+                <span class="mnav-label">Home</span>
+            </a>
+            <a href="/team" class="mobile-nav-item">
+                <i data-lucide="users" class="mnav-icon"></i>
+                <span class="mnav-label">Team</span>
+            </a>
+            <a href="/calendar" class="mobile-nav-item">
+                <i data-lucide="calendar" class="mnav-icon"></i>
+                <span class="mnav-label">Events</span>
+            </a>
+            <a href="/attendance" class="mobile-nav-item">
+                <i data-lucide="clock" class="mnav-icon"></i>
+                <span class="mnav-label">Attend</span>
+            </a>
+            <a href="/inventory" class="mobile-nav-item">
+                <i data-lucide="package" class="mnav-icon"></i>
+                <span class="mnav-label">Inventory</span>
+            </a>
+            <a href="/dispatch" class="mobile-nav-item active">
+                <i data-lucide="zap" class="mnav-icon"></i>
+                <span class="mnav-label">Dispatch</span>
+            </a>
         </div>
     </nav>
 </body>
 </html>
-

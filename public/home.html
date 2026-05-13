@@ -213,6 +213,7 @@
                             <input type="password" id="new-pass" class="input-field" placeholder="••••••••">
                         </div>
                         <button onclick="changePassword()" class="btn-primary w-full py-3 text-[10px] uppercase font-bold tracking-widest">Update Password</button>
+                        <div id="password-card-status" class="hidden text-center text-[10px] font-bold uppercase tracking-widest py-2 rounded-lg mt-2"></div>
                     </div>
                 </section>
             </div>
@@ -328,14 +329,29 @@
 
                 if (data.success) {
                     showToast("Password updated successfully!", "check-circle", "success");
+                    showCardStatus("Success! Credentials updated.", "success");
                     document.getElementById('current-pass').value = '';
                     document.getElementById('new-pass').value = '';
                 } else {
                     showToast(data.message || "Failed to update password", "x-circle", "error");
+                    showCardStatus(data.message || "Update Failed", "error");
                 }
             } catch (err) {
                 showToast("Connection error", "wifi-off", "error");
+                showCardStatus("Network Error", "error");
             }
+        }
+
+        function showCardStatus(msg, type) {
+            const el = document.getElementById('password-card-status');
+            el.innerText = msg;
+            el.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-400', 'bg-red-500/10', 'text-red-400');
+            if (type === 'success') {
+                el.classList.add('bg-emerald-500/10', 'text-emerald-400');
+            } else {
+                el.classList.add('bg-red-500/10', 'text-red-400');
+            }
+            setTimeout(() => el.classList.add('hidden'), 5000);
         }
 
         function showToast(msg, icon, type) {
